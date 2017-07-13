@@ -27,7 +27,6 @@ def call(TIDB_CLOUD_MANAGE_BRANCH) {
 									git credentialsId: "k8s", url: "${BUILD_URL}", branch: "${TIDB_CLOUD_MANAGE_BRANCH}"
 									GITHASH = sh(returnStdout: true, script: "git rev-parse HEAD").trim()
 									sh """
-									pwd
 									export GOPATH=${ROOT}/go:$GOPATH
 									make
 									mkdir -p docker/bin
@@ -37,7 +36,6 @@ def call(TIDB_CLOUD_MANAGE_BRANCH) {
 							stage('push tidb-cloud-manager images'){
 									def tag = "localhost:5000/pingcap/tidb-cloud-manager_k8s:${GITHASH.take(7)}"
 									sh """
-									pwd
 									docker build -t ${tag} docker
 									docker push ${tag}
 									"""
