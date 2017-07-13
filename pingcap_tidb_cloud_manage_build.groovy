@@ -14,10 +14,10 @@ def call(TIDB_CLOUD_MANAGE_BRANCH) {
 		]){
 		catchError {
 			node('jenkins-slave') {
+				def IMAGE_TAG
 				def GITHASH
 				def WORKSPACE = pwd()
 				def BUILD_URL = "git@github.com:pingcap/tidb-cloud-manager.git"
-				def TAG = "localhost:5000/pingcap/tidb-cloud-manager_k8s:${GITHASH.take(7)}"
 				env.GOROOT = "/usr/local/go"
 				env.GOPATH = "/go"
 				env.PATH = "${env.GOROOT}/bin:/bin:${env.PATH}"
@@ -35,9 +35,10 @@ def call(TIDB_CLOUD_MANAGE_BRANCH) {
 									"""
 							}
 							stage('push tidb-cloud-manager images'){
+									IMAGE_TAG = "localhost:5000/pingcap/tidb-cloud-manager_k8s:${GITHASH.take(7)}"
 									sh """
-									docker build -t ${TAG} docker
-									docker push ${TAG}
+									docker build -t ${IMAGE_TAG} docker
+									docker push ${IMAGE_TAG}
 									"""
 							}
 						}
@@ -52,7 +53,7 @@ def call(TIDB_CLOUD_MANAGE_BRANCH) {
 			def slackmsg = "[${env.JOB_NAME.replaceAll('%2F','/')}-${env.BUILD_NUMBER}] `${currentBuild.result}`" + "\n" +
 			"Elapsed Time: `${DURATION}` Mins" + "\n" +
 			"Build Branch: `${TIDB_CLOUD_MANAGE_BRANCH}`, Githash: `${GITHASH.take(7)}`" + "\n" +
-			"Build images:  ${TAG}"
+			"Build images:  ${IMAGE_TAG}"
 			""
 			if(currentBuild.result != "SUCCESS"){
 				echo(slackmsg + "currentBuild.result")
