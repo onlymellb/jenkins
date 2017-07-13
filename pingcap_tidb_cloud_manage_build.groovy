@@ -1,4 +1,12 @@
 def call(TIDB_CLOUD_MANAGE_BRANCH) {
+	
+	def IMAGE_TAG
+	def GITHASH
+	env.GOROOT = "/usr/local/go"
+	env.GOPATH = "/go"
+	env.PATH = "${env.GOROOT}/bin:/bin:${env.PATH}"
+	def BUILD_URL = "git@github.com:pingcap/tidb-cloud-manager.git"
+
 	//define k8s pod template
 	podTemplate(
 		label: 'jenkins-slave',
@@ -14,13 +22,7 @@ def call(TIDB_CLOUD_MANAGE_BRANCH) {
 		]){
 		catchError {
 			node('jenkins-slave') {
-				def IMAGE_TAG
-				def GITHASH
 				def WORKSPACE = pwd()
-				def BUILD_URL = "git@github.com:pingcap/tidb-cloud-manager.git"
-				env.GOROOT = "/usr/local/go"
-				env.GOPATH = "/go"
-				env.PATH = "${env.GOROOT}/bin:/bin:${env.PATH}"
 				stage('build process') {
 					dir("${WORKSPACE}/go/src/github.com/pingcap/tidb-cloud-manager"){
 						container('build-env') {
