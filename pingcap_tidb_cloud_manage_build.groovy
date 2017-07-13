@@ -17,6 +17,7 @@ def call(TIDB_CLOUD_MANAGE_BRANCH) {
 				def GITHASH
 				def WORKSPACE = pwd()
 				def BUILD_URL = "git@github.com:pingcap/tidb-cloud-manager.git"
+				def TAG = "localhost:5000/pingcap/tidb-cloud-manager_k8s:${GITHASH.take(7)}"
 				env.GOROOT = "/usr/local/go"
 				env.GOPATH = "/go"
 				env.PATH = "${env.GOROOT}/bin:/bin:${env.PATH}"
@@ -34,10 +35,9 @@ def call(TIDB_CLOUD_MANAGE_BRANCH) {
 									"""
 							}
 							stage('push tidb-cloud-manager images'){
-									def tag = "localhost:5000/pingcap/tidb-cloud-manager_k8s:${GITHASH.take(7)}"
 									sh """
-									docker build -t ${tag} docker
-									docker push ${tag}
+									docker build -t ${TAG} docker
+									docker push ${TAG}
 									"""
 							}
 						}
@@ -48,7 +48,12 @@ def call(TIDB_CLOUD_MANAGE_BRANCH) {
 		}
 		stage('Summary') {
 			echo("echo summary info #########")
-			slackmsg = "[${env.JOB_NAME.replaceAll('%2F','/')}-${env.BUILD_NUMBER}] `${currentBuild.result}`"
+			def DURATION = ((System.currentTimeMillis() - currentBuild.startTimeInMillis) / 1000 / 60).setScale(2, BigDecimal.ROUND_HALF_UP)
+			def slackmsg = "[${env.JOB_NAME.replaceAll('%2F','/')}-${env.BUILD_NUMBER}] `${currentBuild.result}`" + "\n" +
+			"Elapsed Time: `${DURATION}` Mins" + "\n" +
+			"Build Branch: `${TIDB_CLOUD_MANAGE_BRANCH}`, Githash: `${GITHASH.take(7)}`" + "\n" +
+			"Build images:  ${TAG}"
+			""
 			if(currentBuild.result != "SUCCESS"){
 				echo(slackmsg + "currentBuild.result")
 				slackSend channel: '#iamgroot', color: 'danger', teamDomain: 'pingcap', tokenCredentialId: 'slack-pingcap-token', message: "${slackmsg}"
