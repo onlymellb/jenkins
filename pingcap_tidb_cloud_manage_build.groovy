@@ -15,19 +15,19 @@ def call(TIDB_CLOUD_MANAGE_BRANCH) {
 		catchError {
 			node('jenkins-slave') {
 				def GITHASH
+				def WORKSPACE = pwd()
 				def BUILD_URL = "git@github.com:pingcap/tidb-cloud-manager.git"
 				env.GOROOT = "/usr/local/go"
 				env.GOPATH = "/go"
 				env.PATH = "${env.GOROOT}/bin:/bin:${env.PATH}"
-				def ROOT = pwd()
 				stage('build process') {
-					dir("${ROOT}/go/src/github.com/pingcap/tidb-cloud-manager"){
+					dir("${WORKSPACE}/go/src/github.com/pingcap/tidb-cloud-manager"){
 						container('build-env') {
 							stage('build tidb-cloud-manager binary'){
 									git credentialsId: "k8s", url: "${BUILD_URL}", branch: "${TIDB_CLOUD_MANAGE_BRANCH}"
 									GITHASH = sh(returnStdout: true, script: "git rev-parse HEAD").trim()
 									sh """
-									export GOPATH=${ROOT}/go:$GOPATH
+									export GOPATH=${WORKSPACE}/go:$GOPATH
 									make
 									mkdir -p docker/bin
 									cp bin/tidb-cloud-manager docker/bin/tidb-cloud-manager
