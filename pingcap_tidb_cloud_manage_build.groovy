@@ -49,7 +49,7 @@ def call(TIDB_CLOUD_MANAGE_BRANCH) {
 		}
 		stage('Summary') {
 			echo("echo summary info #########")
-			def DURATION = ((System.currentTimeMillis() - currentBuild.startTimeInMillis) / 1000 / 60).setScale(2, BigDecimal.ROUND_HALF_UP)
+			def DURATION = ((System.currentTimeMillis() - currentBuild.startTimeInMillis) / 1000 / 60).round(2)
 			def slackmsg = "[${env.JOB_NAME.replaceAll('%2F','/')}-${env.BUILD_NUMBER}] `${currentBuild.result}`" + "\n" +
 			"Elapsed Time: `${DURATION}` Mins" + "\n" +
 			"Build Branch: `${TIDB_CLOUD_MANAGE_BRANCH}`, Githash: `${GITHASH.take(7)}`" + "\n" +
