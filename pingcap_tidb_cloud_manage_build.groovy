@@ -58,10 +58,10 @@ def call(TIDB_CLOUD_MANAGE_BRANCH) {
 			"Build images:  ${IMAGE_TAG}"
 			if(currentBuild.result != "SUCCESS"){
 				echo(slackmsg + "currentBuild.result")
-				slackSend channel: '#iamgroot', color: 'danger', teamDomain: 'pingcap', tokenCredentialId: 'slack-pingcap-token', message: "${slackmsg}"
+				slackSend channel: '#cloud_jenkins', color: 'danger', teamDomain: 'pingcap', tokenCredentialId: 'slack-pingcap-token', message: "${slackmsg}"
 			} else {
 				echo(slackmsg + "currentBuild.result")
-				slackSend channel: '#iamgroot', color: 'good', teamDomain: 'pingcap', tokenCredentialId: 'slack-pingcap-token', message: "${slackmsg}"
+				slackSend channel: '#cloud_jenkins', color: 'good', teamDomain: 'pingcap', tokenCredentialId: 'slack-pingcap-token', message: "${slackmsg}"
 			}
 		}
 	}
