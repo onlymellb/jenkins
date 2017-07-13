@@ -54,7 +54,6 @@ def call(TIDB_CLOUD_MANAGE_BRANCH) {
 			"Elapsed Time: `${DURATION}` Mins" + "\n" +
 			"Build Branch: `${TIDB_CLOUD_MANAGE_BRANCH}`, Githash: `${GITHASH.take(7)}`" + "\n" +
 			"Build images:  ${IMAGE_TAG}"
-			""
 			if(currentBuild.result != "SUCCESS"){
 				echo(slackmsg + "currentBuild.result")
 				slackSend channel: '#iamgroot', color: 'danger', teamDomain: 'pingcap', tokenCredentialId: 'slack-pingcap-token', message: "${slackmsg}"
