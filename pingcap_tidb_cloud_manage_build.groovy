@@ -1,4 +1,4 @@
-def call() {
+def call(TIDB_CLOUD_MANAGE_BRANCH) {
 	//define k8s pod template
 	podTemplate(
 		label: 'jenkins-slave',
@@ -24,7 +24,7 @@ def call() {
 					dir("${ROOT}/go/src/github.com/pingcap/tidb-cloud-manager"){
 						container('build-env') {
 							stage('build tidb-cloud-manager binary'){
-									git credentialsId: 'k8s', url: "${BUILD_URL}", branch: "master"
+									git credentialsId: "k8s", url: "${BUILD_URL}", branch: "${TIDB_CLOUD_MANAGE_BRANCH}"
 									GITHASH = sh(returnStdout: true, script: "git rev-parse HEAD").trim()
 									sh """
 									pwd
