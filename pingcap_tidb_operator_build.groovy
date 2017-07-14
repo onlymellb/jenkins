@@ -6,6 +6,7 @@ def call(TIDB_OPERATOR_BRANCH) {
 	env.GOPATH = "/go"
 	env.PATH = "${env.GOROOT}/bin:/bin:${env.PATH}"
 	def BUILD_URL = "git@github.com:pingcap/tidb-operator.git"
+	def KUBECTL_URL = "https://storage.googleapis.com/kubernetes-release/release/v1.6.4/bin/linux/amd64/kubectl"
 
 	//define k8s pod template
 	podTemplate(
@@ -51,7 +52,11 @@ def call(TIDB_OPERATOR_BRANCH) {
 								"""
 							}
 							stage('start run operator e2e test'){
-								sh "./test/e2e/e2e.test -ginkgo.v --operator-image=${IMAGE_TAG}"
+								sh """
+								curl -L ${KUBECTL_URL} -o /usr/local/bin/kubectl
+								chmod +x /usr/local/bin/kubectl
+								./test/e2e/e2e.test -ginkgo.v --operator-image=${IMAGE_TAG}
+								"""
 							}
 						}
 					}
