@@ -33,7 +33,7 @@ def call(TIDB_OPERATOR_BRANCH, TIDB_OPERATOR_IMAGE) {
 									export GOPATH=${WORKSPACE}/go:$GOPATH
 									make
 									mkdir -p docker/bin
-									cp bin/tidb-* docker/bin/tidb-operator
+									cp bin/tidb-* docker/bin
 									"""
 							}
 							stage('push tidb-operator images'){
