@@ -27,19 +27,22 @@ def call(TIDB_OPERATOR_BRANCH, TIDB_OPERATOR_IMAGE) {
 					dir("${WORKSPACE}/go/src/github.com/pingcap/tidb-operator"){
 						container('build-env') {
 							stage('build tidb-operator binary'){
-									git credentialsId: "k8s", url: "${BUILD_URL}", branch: "${TIDB_OPERATOR_BRANCH}"
-									GITHASH = sh(returnStdout: true, script: "git rev-parse HEAD").trim()
-									sh """
-									export GOPATH=${WORKSPACE}/go:$GOPATH
-									make
-									"""
+								git credentialsId: "k8s", url: "${BUILD_URL}", branch: "${TIDB_OPERATOR_BRANCH}"
+								GITHASH = sh(returnStdout: true, script: "git rev-parse HEAD").trim()
+								sh """
+								export GOPATH=${WORKSPACE}/go:$GOPATH
+								make
+								mkdir -p docker/bin
+								cp bin/tidb-* docker/bin
+								"""
 							}
 							stage('push tidb-operator images'){
-									IMAGE_TAG = "localhost:5000/pingcap/tidb-operator_k8s:${GITHASH.take(7)}"
-									sh """
-									docker build -t ${IMAGE_TAG} docker
-									docker push ${IMAGE_TAG}
-									"""
+								IMAGE_TAG = "localhost:5000/pingcap/tidb-operator_k8s:${GITHASH.take(7)}"
+								sh """
+								cd docker
+								docker build -t ${IMAGE_TAG} .
+								docker push ${IMAGE_TAG}
+								"""
 							}
 						}
 					}
