@@ -53,7 +53,7 @@ def call(TIDB_OPERATOR_BRANCH) {
 							}
 							stage('start run operator e2e test'){
 								sh """
-								curl -L ${KUBECTL_URL} -o /usr/local/bin/kubectl
+								curl -L ${KUBECTL_URL} -o /usr/local/bin/kubectl 2>/dev/null
 								chmod +x /usr/local/bin/kubectl
 								./test/e2e/e2e.test -ginkgo.v --operator-image=${IMAGE_TAG}
 								"""
