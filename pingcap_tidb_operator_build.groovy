@@ -23,7 +23,6 @@ def call(TIDB_OPERATOR_BRANCH) {
 		catchError {
 			node('jenkins-slave') {
 				def WORKSPACE = pwd()
-				env.GOPATH = "${WORKSPACE}/go:$GOPATH"
 				stage('build and test') {
 					dir("${WORKSPACE}/go/src/github.com/pingcap/tidb-operator"){
 						container('build-env') {
@@ -31,9 +30,8 @@ def call(TIDB_OPERATOR_BRANCH) {
 								git credentialsId: "k8s", url: "${BUILD_URL}", branch: "${TIDB_OPERATOR_BRANCH}"
 								GITHASH = sh(returnStdout: true, script: "git rev-parse HEAD").trim()
 								sh """
+								export GOPATH=${WORKSPACE}/go:$GOPATH
 								make
-								mkdir -p docker/bin
-								cp bin/tidb-* docker/bin
 								"""
 							}
 							stage('push tidb-operator images'){
@@ -44,7 +42,10 @@ def call(TIDB_OPERATOR_BRANCH) {
 								"""
 							}
 							stage('build operator e2e binary'){
-								sh "ginkgo build test/e2e"
+								sh """
+								export GOPATH=${WORKSPACE}/go:$GOPATH
+								ginkgo build test/e2e
+								"""
 							}
 							stage('start run operator e2e test'){
 								sh "./test/e2e/e2e.test -ginkgo.v --operator-image=${IMAGE_TAG}"

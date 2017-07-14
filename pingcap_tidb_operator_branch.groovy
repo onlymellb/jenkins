@@ -32,15 +32,12 @@ def call(TIDB_OPERATOR_BRANCH, TIDB_OPERATOR_IMAGE) {
 									sh """
 									export GOPATH=${WORKSPACE}/go:$GOPATH
 									make
-									mkdir -p docker/bin
-									cp bin/tidb-* docker/bin
 									"""
 							}
 							stage('push tidb-operator images'){
 									IMAGE_TAG = "localhost:5000/pingcap/tidb-operator_k8s:${GITHASH.take(7)}"
 									sh """
-									cd docker
-									docker build -t ${IMAGE_TAG} .
+									docker build -t ${IMAGE_TAG} docker
 									docker push ${IMAGE_TAG}
 									"""
 							}
