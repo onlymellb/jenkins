@@ -1,4 +1,4 @@
-def call(TIDB_OPERATOR_BRANCH) {
+def call(TIDB_OPERATOR_BRANCH, TIDB_OPERATOR_IMAGE) {
 	
 	def IMAGE_TAG
 	def GITHASH
@@ -6,7 +6,6 @@ def call(TIDB_OPERATOR_BRANCH) {
 	env.GOPATH = "/go"
 	env.PATH = "${env.GOROOT}/bin:/bin:${env.PATH}"
 	def BUILD_URL = "git@github.com:pingcap/tidb-operator.git"
-	def KUBECTL_URL = "https://storage.googleapis.com/kubernetes-release/release/v1.6.4/bin/linux/amd64/kubectl"
 
 	//define k8s pod template
 	podTemplate(
@@ -24,7 +23,7 @@ def call(TIDB_OPERATOR_BRANCH) {
 		catchError {
 			node('jenkins-slave') {
 				def WORKSPACE = pwd()
-				stage('build and test') {
+				stage('build process') {
 					dir("${WORKSPACE}/go/src/github.com/pingcap/tidb-operator"){
 						container('build-env') {
 							stage('build tidb-operator binary'){
@@ -43,19 +42,6 @@ def call(TIDB_OPERATOR_BRANCH) {
 								cd docker
 								docker build -t ${IMAGE_TAG} .
 								docker push ${IMAGE_TAG}
-								"""
-							}
-							stage('build operator e2e binary'){
-								sh """
-								export GOPATH=${WORKSPACE}/go:$GOPATH
-								ginkgo build test/e2e
-								"""
-							}
-							stage('start run operator e2e test'){
-								sh """
-								curl -L ${KUBECTL_URL} -o /usr/local/bin/kubectl 2>/dev/null
-								chmod +x /usr/local/bin/kubectl
-								./test/e2e/e2e.test -ginkgo.v --operator-image=${IMAGE_TAG}
 								"""
 							}
 						}
