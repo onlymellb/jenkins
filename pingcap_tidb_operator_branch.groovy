@@ -28,8 +28,7 @@ def call(TIDB_OPERATOR_BRANCH) {
 					dir("${WORKSPACE}/go/src/github.com/pingcap/tidb-operator"){
 						container('build-env') {
 							stage('build tidb-operator binary'){
-								//git credentialsId: "k8s", url: "${BUILD_URL}", branch: "${TIDB_OPERATOR_BRANCH}"
-								checkout scm
+								git credentialsId: "k8s", url: "${BUILD_URL}", branch: "${TIDB_OPERATOR_BRANCH}"
 								GITHASH = sh(returnStdout: true, script: "git rev-parse HEAD").trim()
 								sh """
 								export GOPATH=${WORKSPACE}/go:$GOPATH
@@ -76,7 +75,7 @@ def call(TIDB_OPERATOR_BRANCH) {
 			"Build images:  ${IMAGE_TAG}"
 			if(currentBuild.result != "SUCCESS"){
 				echo(slackmsg + "currentBuild.result")
-				slackSend channel: '#cloud_jenkins', color: 'danger', teamDomain: 'pingcap', tokenCredentialId: 'slack-pingcap-token', message: "${slackmsg}"
+				slackSend channel: '#cloud_jenkins', color: 'danger', teamDomain: 'pingcap', tokenCredentialId: 'slack-pingcap-toke', message: "${slackmsg}"
 			} else {
 				echo(slackmsg + "currentBuild.result")
 				slackSend channel: '#cloud_jenkins', color: 'good', teamDomain: 'pingcap', tokenCredentialId: 'slack-pingcap-token', message: "${slackmsg}"
