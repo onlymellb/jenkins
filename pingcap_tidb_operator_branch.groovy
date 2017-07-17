@@ -75,7 +75,7 @@ def call(TIDB_OPERATOR_BRANCH) {
 			"Build images:  ${IMAGE_TAG}"
 			if(currentBuild.result != "SUCCESS"){
 				echo(slackmsg + "currentBuild.result")
-				slackSend channel: '#cloud_jenkins', color: 'danger', teamDomain: 'pingcap', tokenCredentialId: 'slack-pingcap-toke', message: "${slackmsg}"
+				slackSend channel: '#cloud_jenkins', color: 'danger', teamDomain: 'pingcap', tokenCredentialId: 'slack-pingcap-token', message: "${slackmsg}"
 			} else {
 				echo(slackmsg + "currentBuild.result")
 				slackSend channel: '#cloud_jenkins', color: 'good', teamDomain: 'pingcap', tokenCredentialId: 'slack-pingcap-token', message: "${slackmsg}"
