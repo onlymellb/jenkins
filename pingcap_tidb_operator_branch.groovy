@@ -28,7 +28,8 @@ def call(TIDB_OPERATOR_BRANCH) {
 					dir("${WORKSPACE}/go/src/github.com/pingcap/tidb-operator"){
 						container('build-env') {
 							stage('build tidb-operator binary'){
-								git credentialsId: "k8s", url: "${BUILD_URL}", branch: "${TIDB_OPERATOR_BRANCH}"
+								//git credentialsId: "k8s", url: "${BUILD_URL}", branch: "${TIDB_OPERATOR_BRANCH}"
+								checkout scm
 								GITHASH = sh(returnStdout: true, script: "git rev-parse HEAD").trim()
 								sh """
 								export GOPATH=${WORKSPACE}/go:$GOPATH
