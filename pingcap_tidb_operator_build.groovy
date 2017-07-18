@@ -1,15 +1,15 @@
-def call(TIDB_OPERATOR_BRANCH, TIDB_OPERATOR_IMAGE) {
+def call(BUILD_BRANCH) {
 	
-	def IMAGE_TAG
 	def GITHASH
-	env.GOROOT = "/usr/local/go"
 	env.GOPATH = "/go"
+	env.GOROOT = "/usr/local/go"
 	env.PATH = "${env.GOROOT}/bin:/bin:${env.PATH}"
+	def UCLOUD_OSS_URL = "http://pingcap-dev.hk.ufileos.com"
 	def BUILD_URL = "git@github.com:pingcap/tidb-operator.git"
 
 	//define k8s pod template
 	podTemplate(
-		label: 'jenkins-slave',
+		label: 'centos7_build',
 		volumes: [
 			hostPathVolume(hostPath: '/var/run/docker.sock', mountPath: '/var/run/docker.sock')
 		],
@@ -21,28 +21,32 @@ def call(TIDB_OPERATOR_BRANCH, TIDB_OPERATOR_IMAGE) {
 				command: 'cat')
 		]){
 		catchError {
-			node('jenkins-slave') {
+			node('centos7_build') {
 				def WORKSPACE = pwd()
-				stage('build process') {
+				stage('Build') {
 					dir("${WORKSPACE}/go/src/github.com/pingcap/tidb-operator"){
 						container('build-env') {
 							stage('build tidb-operator binary'){
-								git credentialsId: "k8s", url: "${BUILD_URL}", branch: "${TIDB_OPERATOR_BRANCH}"
+								// checkout source code
+								git credentialsId: "k8s", url: "${BUILD_URL}", branch: "${BUILD_BRANCH}"
 								GITHASH = sh(returnStdout: true, script: "git rev-parse HEAD").trim()
+
+								// build
+								sh "export GOPATH=${WORKSPACE}/go:$GOPATH && make"
+
+								//upload binary
 								sh """
-								export GOPATH=${WORKSPACE}/go:$GOPATH
-								make
-								mkdir -p docker/bin
-								cp bin/tidb-* docker/bin
+								cp ~/bin/config.cfg ./
+								tar zcvf tidb-operator.tar.gz bin/*
+								filemgr-linux64 --action mput --bucket pingcap-dev --nobar --key builds/pingcap/operator/${GITHASH}/centos7/tidb-operator.tar.gz --file tidb-operator.tar.gz
 								"""
-							}
-							stage('push tidb-operator images'){
-								IMAGE_TAG = "localhost:5000/pingcap/tidb-operator_k8s:${GITHASH.take(7)}"
-								sh """
-								cd docker
-								docker build -t ${IMAGE_TAG} .
-								docker push ${IMAGE_TAG}
-								"""
+
+								//update refs
+								writeFile file: 'sha1', text: "${GITHASH}"
+								sh "filemgr-linux64 --action mput --bucket pingcap-dev --nobar --key refs/pingcap/operator/${BUILD_BRANCH}/centos7/sha1 --file sha1"
+
+								//cleanup
+								sh "rm -f sha1 tidb-operator.tar.gz config.cfg"
 							}
 						}
 					}
@@ -55,8 +59,9 @@ def call(TIDB_OPERATOR_BRANCH, TIDB_OPERATOR_IMAGE) {
 			def DURATION = (((System.currentTimeMillis() - currentBuild.startTimeInMillis) / 1000 / 60) as double).round(2)
 			def slackmsg = "[${env.JOB_NAME.replaceAll('%2F','/')}-${env.BUILD_NUMBER}] `${currentBuild.result}`" + "\n" +
 			"Elapsed Time: `${DURATION}` Mins" + "\n" +
-			"Build Branch: `${TIDB_OPERATOR_BRANCH}`, Githash: `${GITHASH.take(7)}`" + "\n" +
-			"Build images:  ${IMAGE_TAG}"
+			"Build Branch: `${BUILD_BRANCH}`, Githash: `${GITHASH.take(7)}`" + "\n" +
+			"Binary Download URL:" + "\n" +
+			"${UCLOUD_OSS_URL}/builds/pingcap/operator/${GITHASH}/centos7/tidb-operator.tar.gz"
 			if(currentBuild.result != "SUCCESS"){
 				echo(slackmsg + "currentBuild.result")
 				slackSend channel: '#cloud_jenkins', color: 'danger', teamDomain: 'pingcap', tokenCredentialId: 'slack-pingcap-token', message: "${slackmsg}"
