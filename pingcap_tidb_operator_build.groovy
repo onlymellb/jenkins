@@ -14,6 +14,7 @@ def call(BUILD_BRANCH) {
 			containerTemplate(
 				name: 'build-env',
 				image: 'localhost:5000/pingcap/build_env:latest',
+				alwaysPullImage: true,
 				ttyEnabled: true,
 				command: 'cat')
 		]){
