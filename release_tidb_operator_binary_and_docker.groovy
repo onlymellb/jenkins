@@ -74,16 +74,17 @@ __EOF__
 			def DURATION = (((System.currentTimeMillis() - currentBuild.startTimeInMillis) / 1000 / 60) as double).round(2)
 			def slackmsg = "[${env.JOB_NAME.replaceAll('%2F','/')}-${env.BUILD_NUMBER}] `${currentBuild.result}`" + "\n" +
 			"Elapsed Time: `${DURATION}` Mins" + "\n" +
-			"tidb-operator Branch: `${TIDB_OPERATOR_BRANCH}`, Githash: `${GITHASH.take(7)}`" + "\n" +
-			"tidb-operator Binary Download URL:" + "\n" +
-			"http://download.pingcap.org/tidb-operator-${RELEASE_TAG}-linux-amd64.tar.gz" + "\n" +
-			"tidb-operator Binary sha256   URL:" + "\n" +
-			"http://download.pingcap.org/tidb-operator-${RELEASE_TAG}-linux-amd64.sha256" + "\n" +
-			"tidb-operator Docker Image: `pingcap/tidb-operator:${RELEASE_TAG}`"
+			"tidb-operator Branch: `${TIDB_OPERATOR_BRANCH}`, Githash: `${GITHASH.take(7)}`"
 
 			if(currentBuild.result != "SUCCESS"){
 				slackSend channel: '#cloud_jenkins', color: 'danger', teamDomain: 'pingcap', tokenCredentialId: 'slack-pingcap-token', message: "${slackmsg}"
 			} else {
+				slackmsg = "${slackmsg}" + "\n" +
+				"tidb-operator Binary Download URL:" + "\n" +
+				"http://download.pingcap.org/tidb-operator-${RELEASE_TAG}-linux-amd64.tar.gz" + "\n" +
+				"tidb-operator Binary sha256   URL:" + "\n" +
+				"http://download.pingcap.org/tidb-operator-${RELEASE_TAG}-linux-amd64.sha256" + "\n" +
+				"tidb-operator Docker Image: `pingcap/tidb-operator:${RELEASE_TAG}`"
 				slackSend channel: '#cloud_jenkins', color: 'good', teamDomain: 'pingcap', tokenCredentialId: 'slack-pingcap-token', message: "${slackmsg}"
 			}
 		}
