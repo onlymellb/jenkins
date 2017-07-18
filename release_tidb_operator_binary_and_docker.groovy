@@ -36,13 +36,6 @@ def call(TIDB_OPERATOR_BRANCH, RELEASE_TAG) {
 								sha256sum ${target}.tar.gz > ${target}.sha256
 								md5sum ${target}.tar.gz > ${target}.md5
 								"""
-
-								sh """
-								export REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-bundle.crt
-								upload.py ${target}.tar.gz ${target}.tar.gz
-								upload.py ${target}.sha256 ${target}.sha256
-								upload.py ${target}.md5 ${target}.md5
-								"""
 							}
 
 							stage('Push tidb-operator Docker Image'){
@@ -80,10 +73,6 @@ __EOF__
 				slackSend channel: '#cloud_jenkins', color: 'danger', teamDomain: 'pingcap', tokenCredentialId: 'slack-pingcap-token', message: "${slackmsg}"
 			} else {
 				slackmsg = "${slackmsg}" + "\n" +
-				"tidb-operator Binary Download URL:" + "\n" +
-				"http://download.pingcap.org/tidb-operator-${RELEASE_TAG}-linux-amd64.tar.gz" + "\n" +
-				"tidb-operator Binary sha256   URL:" + "\n" +
-				"http://download.pingcap.org/tidb-operator-${RELEASE_TAG}-linux-amd64.sha256" + "\n" +
 				"tidb-operator Docker Image: `pingcap/tidb-operator:${RELEASE_TAG}`"
 				slackSend channel: '#cloud_jenkins', color: 'good', teamDomain: 'pingcap', tokenCredentialId: 'slack-pingcap-token', message: "${slackmsg}"
 			}
