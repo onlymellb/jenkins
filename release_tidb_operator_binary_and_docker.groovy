@@ -7,6 +7,9 @@ def call(TIDB_OPERATOR_BRANCH, RELEASE_TAG) {
 	//define k8s pod template
 	podTemplate(
 		label: 'delivery',
+		volumes: [
+			hostPathVolume(hostPath: '/var/run/docker.sock', mountPath: '/var/run/docker.sock')
+		],
 		containers: [
 			containerTemplate(
 				name: 'build-env',
@@ -26,18 +29,6 @@ def call(TIDB_OPERATOR_BRANCH, RELEASE_TAG) {
 								sh "curl ${UCLOUD_OSS_URL}/builds/pingcap/operator/${GITHASH}/centos7/tidb-operator.tar.gz | tar xz"
 							}
 
-							stage('Push Centos7 Binary'){
-								def target = "tidb-operator-${RELEASE_TAG}-linux-amd64"
-								
-								sh """
-								mkdir ${target}
-								cp -R bin ./${target}
-								tar czvf ${target}.tar.gz ${target}
-								sha256sum ${target}.tar.gz > ${target}.sha256
-								md5sum ${target}.tar.gz > ${target}.md5
-								"""
-							}
-
 							stage('Push tidb-operator Docker Image'){
 								sh """
 								mkdir -p tidb_operator_docker_build/bin
@@ -51,8 +42,8 @@ ADD bin/tidb-volume-manager /usr/local/bin/tidb-volume-manager
 ADD bin/tidb-scheduler /usr/local/bin/tidb-scheduler
 CMD ["/bin/sh", "-c", "/usr/local/bin/tidb-operator"]
 __EOF__
-								docker build -t pingcap/tidb-operator:${RELEASE_TAG} .
 								cp -R /tmp/.docker ~/
+								docker build -t pingcap/tidb-operator:${RELEASE_TAG} .
 								docker push
 								"""
 							}
