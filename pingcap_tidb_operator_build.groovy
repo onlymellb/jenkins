@@ -31,6 +31,9 @@ def call(BUILD_BRANCH) {
 
 								// build
 								sh "export GOPATH=${WORKSPACE}/go:$GOPATH && make"
+							}
+
+							stage('upload tidb-operator binary'){
 
 								//upload binary
 								sh """
@@ -42,9 +45,6 @@ def call(BUILD_BRANCH) {
 								//update refs
 								writeFile file: 'sha1', text: "${GITHASH}"
 								sh "filemgr-linux64 --action mput --bucket pingcap-dev --nobar --key refs/pingcap/operator/${BUILD_BRANCH}/centos7/sha1 --file sha1"
-
-								//cleanup
-								sh "rm -f sha1 tidb-operator.tar.gz config.cfg"
 							}
 						}
 					}
