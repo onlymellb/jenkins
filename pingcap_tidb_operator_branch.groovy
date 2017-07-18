@@ -39,7 +39,7 @@ def call(TIDB_OPERATOR_BRANCH) {
 								"""
 							}
 							stage('push tidb-operator images'){
-								IMAGE_TAG = "localhost:5000/pingcap/tidb-operator_k8s:${GITHASH.take(7)}"
+								IMAGE_TAG = "localhost:5000/pingcap/tidb-operator_e2e:${GITHASH.take(7)}"
 								sh """
 								cd docker
 								docker build -t ${IMAGE_TAG} .
