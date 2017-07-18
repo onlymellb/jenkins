@@ -10,9 +10,6 @@ def call(BUILD_BRANCH) {
 	//define k8s pod template
 	podTemplate(
 		label: 'centos7_build',
-		volumes: [
-			hostPathVolume(hostPath: '/var/run/docker.sock', mountPath: '/var/run/docker.sock')
-		],
 		containers: [
 			containerTemplate(
 				name: 'build-env',
@@ -36,7 +33,7 @@ def call(BUILD_BRANCH) {
 
 								//upload binary
 								sh """
-								cp ~/bin/config.cfg ./
+								pwd && cp ~/bin/config.cfg ./ || sleep 600
 								tar zcvf tidb-operator.tar.gz bin/*
 								filemgr-linux64 --action mput --bucket pingcap-dev --nobar --key builds/pingcap/operator/${GITHASH}/centos7/tidb-operator.tar.gz --file tidb-operator.tar.gz
 								"""
