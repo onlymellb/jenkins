@@ -61,7 +61,7 @@ def call(BUILD_BRANCH) {
 			if(currentBuild.result != "SUCCESS"){
 				slackSend channel: '#cloud_jenkins', color: 'danger', teamDomain: 'pingcap', tokenCredentialId: 'slack-pingcap-token', message: "${slackmsg}"
 			} else {
-				slackmsg = ${slackmsg} + "\n" +
+				slackmsg = "${slackmsg}" + "\n" +
 				"Binary Download URL:" + "\n" +
 				"${UCLOUD_OSS_URL}/builds/pingcap/operator/${GITHASH}/centos7/tidb-operator.tar.gz"
 				slackSend channel: '#cloud_jenkins', color: 'good', teamDomain: 'pingcap', tokenCredentialId: 'slack-pingcap-token', message: "${slackmsg}"
