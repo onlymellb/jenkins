@@ -33,7 +33,7 @@ def call(BUILD_BRANCH) {
 
 								//upload binary
 								sh """
-								pwd && cp ~/bin/config.cfg ./ || sleep 600
+								cp /usr/local/bin/config.cfg ./ || sleep 600
 								tar zcvf tidb-operator.tar.gz bin/*
 								filemgr-linux64 --action mput --bucket pingcap-dev --nobar --key builds/pingcap/operator/${GITHASH}/centos7/tidb-operator.tar.gz --file tidb-operator.tar.gz
 								"""
@@ -52,18 +52,17 @@ def call(BUILD_BRANCH) {
 			currentBuild.result = "SUCCESS"
 		}
 		stage('Summary') {
-			echo("echo summary info #########")
+			echo("echo summary info ########")
 			def DURATION = (((System.currentTimeMillis() - currentBuild.startTimeInMillis) / 1000 / 60) as double).round(2)
 			def slackmsg = "[${env.JOB_NAME.replaceAll('%2F','/')}-${env.BUILD_NUMBER}] `${currentBuild.result}`" + "\n" +
 			"Elapsed Time: `${DURATION}` Mins" + "\n" +
-			"Build Branch: `${BUILD_BRANCH}`, Githash: `${GITHASH.take(7)}`" + "\n" +
-			"Binary Download URL:" + "\n" +
-			"${UCLOUD_OSS_URL}/builds/pingcap/operator/${GITHASH}/centos7/tidb-operator.tar.gz"
+			"Build Branch: `${BUILD_BRANCH}`, Githash: `${GITHASH.take(7)}`"
 			if(currentBuild.result != "SUCCESS"){
-				echo(slackmsg + "currentBuild.result")
 				slackSend channel: '#cloud_jenkins', color: 'danger', teamDomain: 'pingcap', tokenCredentialId: 'slack-pingcap-token', message: "${slackmsg}"
 			} else {
-				echo(slackmsg + "currentBuild.result")
+				slackmsg = ${slackmsg} + "\n" +
+				"Binary Download URL:" + "\n" +
+				"${UCLOUD_OSS_URL}/builds/pingcap/operator/${GITHASH}/centos7/tidb-operator.tar.gz"
 				slackSend channel: '#cloud_jenkins', color: 'good', teamDomain: 'pingcap', tokenCredentialId: 'slack-pingcap-token', message: "${slackmsg}"
 			}
 		}
