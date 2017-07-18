@@ -69,11 +69,26 @@ def call(TIDB_OPERATOR_BRANCH) {
 		}
 		stage('Summary') {
 			echo("echo summary info #########")
+			def getChangeLogText = {
+				def changeLogText = ""
+				for (int i = 0; i < currentBuild.changeSets.size(); i++) {
+					for (int j = 0; j < currentBuild.changeSets[i].items.length; j++) {
+						def commitId = "${currentBuild.changeSets[i].items[j].commitId}"
+							def commitMsg = "${currentBuild.changeSets[i].items[j].msg}"
+							changeLogText += "\n" + "`${commitId.take(7)}` ${commitMsg}"
+					}
+				}
+				return changeLogText
+			}
+			def CHANGELOG = getChangeLogText()
 			def DURATION = (((System.currentTimeMillis() - currentBuild.startTimeInMillis) / 1000 / 60) as double).round(2)
 			def slackmsg = "[${env.JOB_NAME.replaceAll('%2F','/')}-${env.BUILD_NUMBER}] `${currentBuild.result}`" + "\n" +
+			"`e2e test`" + "\n" +
 			"Elapsed Time: `${DURATION}` Mins" + "\n" +
 			"Build Branch: `${TIDB_OPERATOR_BRANCH}`, Githash: `${GITHASH.take(7)}`" + "\n" +
-			"Build Operator images:  ${IMAGE_TAG}"
+			"${CHANGELOG}" + "\n" +
+			"${env.RUN_DISPLAY_URL}"
+
 			if(currentBuild.result != "SUCCESS"){
 				slackSend channel: '#cloud_jenkins', color: 'danger', teamDomain: 'pingcap', tokenCredentialId: 'slack-pingcap-token', message: "${slackmsg}"
 			} else {
