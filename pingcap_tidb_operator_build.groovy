@@ -34,7 +34,7 @@ def call(BUILD_BRANCH) {
 
 								//upload binary
 								sh """
-								cp /usr/local/bin/config.cfg ./ || sleep 600
+								cp /usr/local/bin/config.cfg ./
 								tar zcvf tidb-operator.tar.gz bin/*
 								filemgr-linux64 --action mput --bucket pingcap-dev --nobar --key builds/pingcap/operator/${GITHASH}/centos7/tidb-operator.tar.gz --file tidb-operator.tar.gz
 								"""

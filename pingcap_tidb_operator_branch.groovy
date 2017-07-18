@@ -73,12 +73,10 @@ def call(TIDB_OPERATOR_BRANCH) {
 			def slackmsg = "[${env.JOB_NAME.replaceAll('%2F','/')}-${env.BUILD_NUMBER}] `${currentBuild.result}`" + "\n" +
 			"Elapsed Time: `${DURATION}` Mins" + "\n" +
 			"Build Branch: `${TIDB_OPERATOR_BRANCH}`, Githash: `${GITHASH.take(7)}`" + "\n" +
-			"Build images:  ${IMAGE_TAG}"
+			"Build Operator images:  ${IMAGE_TAG}"
 			if(currentBuild.result != "SUCCESS"){
-				echo(slackmsg + "currentBuild.result")
 				slackSend channel: '#cloud_jenkins', color: 'danger', teamDomain: 'pingcap', tokenCredentialId: 'slack-pingcap-token', message: "${slackmsg}"
 			} else {
-				echo(slackmsg + "currentBuild.result")
 				slackSend channel: '#cloud_jenkins', color: 'good', teamDomain: 'pingcap', tokenCredentialId: 'slack-pingcap-token', message: "${slackmsg}"
 			}
 		}
