@@ -49,15 +49,14 @@ def call(TIDB_OPERATOR_BRANCH) {
 							stage('build operator e2e binary'){
 								sh """
 								export GOPATH=${WORKSPACE}/go:$GOPATH
-								curl -L ${KUBECTL_URL} -o /usr/local/bin/kubectl 2>/dev/null
-								chmod +x /usr/local/bin/kubectl
-								sed 's/image: pingcap\/tidb-operator:v0.1.0/image: {{ .Image }}/g' example/tidb-operator.yaml > /etc/tidb-operator.yaml.tmpl
 								ginkgo build test/e2e
 								"""
 							}
 							stage('start run operator e2e test'){
 								ansiColor('xterm') {
 								sh """
+								curl -L ${KUBECTL_URL} -o /usr/local/bin/kubectl 2>/dev/null
+								chmod +x /usr/local/bin/kubectl
 								./test/e2e/e2e.test -ginkgo.v --operator-image=${IMAGE_TAG}
 								"""
 								}
