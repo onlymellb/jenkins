@@ -58,7 +58,7 @@ def call(TIDB_OPERATOR_BRANCH) {
 							stage('start prepare runtime environment'){
 								def SRC_FILE_CONTENT = readFile file: "example/tidb-operator.yaml"
 								def DST_FILE_CONTENT = SRC_FILE_CONTENT.replaceAll('image: pingcap/tidb-operator:v0.1.0', 'image: {{ .Image }}')
-								writeFile file: '/etc/tidb-operator.yaml.tmpl', text: "${DST_FILE_CONTENT}"
+								writeFile file: '/tmp/tidb-operator.yaml.tmpl', text: "${DST_FILE_CONTENT}"
 								sh """
 								curl -L ${KUBECTL_URL} -o /usr/local/bin/kubectl 2>/dev/null
 								chmod +x /usr/local/bin/kubectl
