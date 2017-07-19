@@ -30,13 +30,8 @@ def call(TIDB_OPERATOR_BRANCH) {
 						container('build-env') {
 							stage('build tidb-operator binary'){
 								git credentialsId: "k8s", url: "${BUILD_URL}", branch: "${TIDB_OPERATOR_BRANCH}"
-								def SRC_FILE_CONTENT = readFile file: "example/tidb-operator.yaml"
-								def DST_FILE_CONTENT = SRC_FILE_CONTENT.replaceAll('image: pingcap/tidb-operator:v0.1.0', 'image: {{ .Image }}')
-								writeFile file: 'tidb-operator.yaml.tmpl', text: "${DST_FILE_CONTENT}"
 								GITHASH = sh(returnStdout: true, script: "git rev-parse HEAD").trim()
 								sh """
-								cat tidb-operator.yaml.tmpl
-								mv tidb-operator.yaml.tmpl /tmp/tidb-operator.yaml.tmpl
 								export GOPATH=${WORKSPACE}/go:$GOPATH
 								make
 								mkdir -p docker/bin
@@ -63,8 +58,9 @@ def call(TIDB_OPERATOR_BRANCH) {
 							stage('start prepare runtime environment'){
 								def SRC_FILE_CONTENT = readFile file: "example/tidb-operator.yaml"
 								def DST_FILE_CONTENT = SRC_FILE_CONTENT.replaceAll('image: pingcap/tidb-operator:v0.1.0', 'image: {{ .Image }}')
-								writeFile file: '/tmp/tidb-operator.yaml.tmpl', text: "${DST_FILE_CONTENT}"
+								writeFile file: 'tidb-operator.yaml.tmpl', text: "${DST_FILE_CONTENT}"
 								sh """
+								mv tidb-operator.yaml.tmpl /tmp/tidb-operator.yaml.tmpl
 								curl -L ${KUBECTL_URL} -o /usr/local/bin/kubectl 2>/dev/null
 								chmod +x /usr/local/bin/kubectl
 								"""
