@@ -30,8 +30,13 @@ def call(TIDB_OPERATOR_BRANCH) {
 						container('build-env') {
 							stage('build tidb-operator binary'){
 								git credentialsId: "k8s", url: "${BUILD_URL}", branch: "${TIDB_OPERATOR_BRANCH}"
+								def SRC_FILE_CONTENT = readFile file: "example/tidb-operator.yaml"
+								def DST_FILE_CONTENT = SRC_FILE_CONTENT.replaceAll('image: pingcap/tidb-operator:v0.1.0', 'image: {{ .Image }}')
+								writeFile file: '/tmp/tidb-operator.yaml.tmpl', text: "${DST_FILE_CONTENT}"
 								GITHASH = sh(returnStdout: true, script: "git rev-parse HEAD").trim()
 								sh """
+								cat /tmp/tidb-operator.yaml.tmpl
+								echo ${DST_FILE_CONTENT}
 								export GOPATH=${WORKSPACE}/go:$GOPATH
 								make
 								mkdir -p docker/bin
