@@ -38,6 +38,7 @@ def call(TIDB_OPERATOR_BRANCH) {
 								cp bin/tidb-* docker/bin
 								"""
 							}
+
 							stage('push tidb-operator images'){
 								IMAGE_TAG = "localhost:5000/pingcap/tidb-operator_e2e:${GITHASH.take(7)}"
 								sh """
@@ -46,17 +47,27 @@ def call(TIDB_OPERATOR_BRANCH) {
 								docker push ${IMAGE_TAG}
 								"""
 							}
+
 							stage('build operator e2e binary'){
 								sh """
 								export GOPATH=${WORKSPACE}/go:$GOPATH
 								ginkgo build test/e2e
 								"""
 							}
-							stage('start run operator e2e test'){
-								ansiColor('xterm') {
+
+							stage('start prepare runtime environment'){
+								def SRC_FILE_CONTENT = readFile file: "example/tidb-operator.yaml"
+								def DST_FILE_CONTENT = SRC_FILE_CONTENT.replaceAll('image: pingcap/tidb-operator:v0.1.0', 'image: {{ .Image }}')
+								writeFile file: '/etc/tidb-operator.yaml.tmpl', text: "${DST_FILE_CONTENT}"
 								sh """
 								curl -L ${KUBECTL_URL} -o /usr/local/bin/kubectl 2>/dev/null
 								chmod +x /usr/local/bin/kubectl
+								"""
+							}
+
+							stage('start run operator e2e test'){
+								ansiColor('xterm') {
+								sh """
 								./test/e2e/e2e.test -ginkgo.v --operator-image=${IMAGE_TAG}
 								"""
 								}
