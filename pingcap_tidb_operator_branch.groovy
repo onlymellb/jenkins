@@ -61,6 +61,8 @@ def call(TIDB_OPERATOR_BRANCH) {
 								writeFile file: 'tidb-operator.yaml.tmpl', text: "${DST_FILE_CONTENT}"
 								sh """
 								mv tidb-operator.yaml.tmpl /tmp/tidb-operator.yaml.tmpl
+								mkdir -p /tmp/data
+								cp ./test/e2e/docker/data/e2e-one.yaml /tmp/data/e2e-one.yaml
 								curl -L ${KUBECTL_URL} -o /usr/local/bin/kubectl 2>/dev/null
 								chmod +x /usr/local/bin/kubectl
 								"""
