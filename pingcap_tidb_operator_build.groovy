@@ -58,6 +58,7 @@ def call(BUILD_BRANCH) {
 			def slackmsg = "[${env.JOB_NAME.replaceAll('%2F','/')}-${env.BUILD_NUMBER}] `${currentBuild.result}`" + "\n" +
 			"Elapsed Time: `${DURATION}` Mins" + "\n" +
 			"Build Branch: `${BUILD_BRANCH}`, Githash: `${GITHASH.take(7)}`" + "\n" +
+			"Display URL:" + "\n" +
 			"${env.RUN_DISPLAY_URL}"
 			if(currentBuild.result != "SUCCESS"){
 				slackSend channel: '#cloud_jenkins', color: 'danger', teamDomain: 'pingcap', tokenCredentialId: 'slack-pingcap-token', message: "${slackmsg}"

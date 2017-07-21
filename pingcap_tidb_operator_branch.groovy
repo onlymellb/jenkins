@@ -101,6 +101,7 @@ def call(TIDB_OPERATOR_BRANCH) {
 			"Elapsed Time: `${DURATION}` Mins" + "\n" +
 			"Build Branch: `${TIDB_OPERATOR_BRANCH}`, Githash: `${GITHASH.take(7)}`" + "\n" +
 			"${CHANGELOG}" + "\n" +
+			"Display URL:" + "\n" +
 			"${env.RUN_DISPLAY_URL}"
 
 			if(currentBuild.result != "SUCCESS"){

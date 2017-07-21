@@ -59,6 +59,7 @@ __EOF__
 			def slackmsg = "[${env.JOB_NAME.replaceAll('%2F','/')}-${env.BUILD_NUMBER}] `${currentBuild.result}`" + "\n" +
 			"Elapsed Time: `${DURATION}` Mins" + "\n" +
 			"tidb-operator Branch: `${TIDB_OPERATOR_BRANCH}`, Githash: `${GITHASH.take(7)}`" + "\n" +
+			"Display URL:" + "\n" +
 			"${env.RUN_DISPLAY_URL}"
 
 			if(currentBuild.result != "SUCCESS"){
