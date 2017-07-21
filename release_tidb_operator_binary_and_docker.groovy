@@ -58,7 +58,8 @@ __EOF__
 			def DURATION = (((System.currentTimeMillis() - currentBuild.startTimeInMillis) / 1000 / 60) as double).round(2)
 			def slackmsg = "[${env.JOB_NAME.replaceAll('%2F','/')}-${env.BUILD_NUMBER}] `${currentBuild.result}`" + "\n" +
 			"Elapsed Time: `${DURATION}` Mins" + "\n" +
-			"tidb-operator Branch: `${TIDB_OPERATOR_BRANCH}`, Githash: `${GITHASH.take(7)}`"
+			"tidb-operator Branch: `${TIDB_OPERATOR_BRANCH}`, Githash: `${GITHASH.take(7)}`" + "\n" +
+			"${env.RUN_DISPLAY_URL}"
 
 			if(currentBuild.result != "SUCCESS"){
 				slackSend channel: '#cloud_jenkins', color: 'danger', teamDomain: 'pingcap', tokenCredentialId: 'slack-pingcap-token', message: "${slackmsg}"
