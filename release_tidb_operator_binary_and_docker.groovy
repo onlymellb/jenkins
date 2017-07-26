@@ -44,7 +44,9 @@ CMD ["/bin/sh", "-c", "/usr/local/bin/tidb-operator"]
 __EOF__
 								cp -R /tmp/.docker ~/
 								docker build -t pingcap/tidb-operator:${RELEASE_TAG} .
+								docker tag pingcap/tidb-operator:${RELEASE_TAG}  uhub.service.ucloud.cn/pingcap/tidb-operator:${RELEASE_TAG}
 								docker push pingcap/tidb-operator:${RELEASE_TAG}
+								docker push uhub.service.ucloud.cn/pingcap/tidb-operator:${RELEASE_TAG}
 								"""
 							}
 						}
