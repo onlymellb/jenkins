@@ -68,7 +68,8 @@ __EOF__
 				slackSend channel: '#cloud_jenkins', color: 'danger', teamDomain: 'pingcap', tokenCredentialId: 'slack-pingcap-token', message: "${slackmsg}"
 			} else {
 				slackmsg = "${slackmsg}" + "\n" +
-				"tidb-operator Docker Image: `pingcap/tidb-operator:${RELEASE_TAG}`"
+				"tidb-operator Docker Image: `pingcap/tidb-operator:${RELEASE_TAG}`" + "\n" +
+				"tidb-operator Docker Image: `uhub.service.ucloud.cn/pingcap/tidb-operator:${RELEASE_TAG}`"
 				slackSend channel: '#cloud_jenkins', color: 'good', teamDomain: 'pingcap', tokenCredentialId: 'slack-pingcap-token', message: "${slackmsg}"
 			}
 		}
