@@ -37,7 +37,9 @@ def call(TIDB_CLOUD_MANAGER_BRANCH, RELEASE_TAG) {
 									def image = docker.build("pingcap/tidb-cloud-manager:${RELEASE_TAG}", "docker")
 									//push to docker hub
 									//image.push()
-									sh 'docker push pingcap/tidb-cloud-manager:${RELEASE_TAG}'
+									sh """
+									docker push pingcap/tidb-cloud-manager:${RELEASE_TAG}
+									"""
 									//push to ucloud registry
 									image.tag("uhub.service.ucloud.cn/pingcap/tidb-cloud-manager:${RELEASE_TAG}").push()
 								}
