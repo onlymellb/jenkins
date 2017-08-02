@@ -52,6 +52,7 @@ __EOF__
 									image.push()
 									//push to ucloud registry
 									image.tag("uhub.service.ucloud.cn/pingcap/tidb-cloud-manager:${RELEASE_TAG}").push()
+								}
 							}
 						}
 					}
