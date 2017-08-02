@@ -31,23 +31,10 @@ def call(TIDB_CLOUD_MANAGER_BRANCH, RELEASE_TAG) {
 
 							stage('Push tidb-cloud-manager Docker Image'){
 								sh """
-								mkdir -p tidb_cloud-manager_docker_build/bin
-								cd tidb_cloud-manager_docker_build
-								cp ../bin/* ./bin
-								cp ../docker/* .
-								cat > Dockerfile << __EOF__
-FROM alpine:3.5
-RUN apk add --no-cache ca-certificates
-COPY bin/tidb-cloud-manager /usr/local/bin/tidb-cloud-manager
-COPY pd.toml.tmpl /pd.toml.tmpl
-COPY tikv.toml.tmpl /tikv.toml.tmpl
-COPY apidocs /usr/local/apidocs
-ENTRYPOINT ["/usr/local/bin/tidb-cloud-manager"]
-__EOF__
 								cp -R /tmp/.docker ~/
 								"""
 								withDockerServer([uri: "unix:///var/run/docker.sock"]) {
-									def image = docker.build("pingcap/tidb-cloud-manager:${RELEASE_TAG}", "tidb_cloud-manager_docker_build")
+									def image = docker.build("pingcap/tidb-cloud-manager:${RELEASE_TAG}", "docker")
 									//push to docker hub
 									image.push()
 									//push to ucloud registry
