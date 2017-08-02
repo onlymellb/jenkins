@@ -25,7 +25,7 @@ def call(TIDB_CLOUD_MANAGER_BRANCH, RELEASE_TAG) {
 					dir("${WORKSPACE}/cloud-manager"){
 						container('build-env') {
 							stage('Download tidb-cloud-manager binary'){
-								GITHASH = sh(returnStdout: true, script: "curl ${UCLOUD_OSS_URL}/refs/pingcap/cloud-manager/${TIDB_OPERATOR_BRANCH}/centos7/sha1").trim()
+								GITHASH = sh(returnStdout: true, script: "curl ${UCLOUD_OSS_URL}/refs/pingcap/cloud-manager/${TIDB_CLOUD_MANAGER_BRANCH}/centos7/sha1").trim()
 								sh "curl ${UCLOUD_OSS_URL}/builds/pingcap/cloud-manager/${GITHASH}/centos7/tidb-cloud-manager.tar.gz | tar xz"
 							}
 
@@ -65,7 +65,7 @@ __EOF__
 			def DURATION = (((System.currentTimeMillis() - currentBuild.startTimeInMillis) / 1000 / 60) as double).round(2)
 			def slackmsg = "[${env.JOB_NAME.replaceAll('%2F','/')}-${env.BUILD_NUMBER}] `${currentBuild.result}`" + "\n" +
 			"Elapsed Time: `${DURATION}` Mins" + "\n" +
-			"tidb-cloud-manager Branch: `${TIDB_OPERATOR_BRANCH}`, Githash: `${GITHASH.take(7)}`" + "\n" +
+			"tidb-cloud-manager Branch: `${TIDB_CLOUD_MANAGER_BRANCH}`, Githash: `${GITHASH.take(7)}`" + "\n" +
 			"Display URL:" + "\n" +
 			"${env.RUN_DISPLAY_URL}"
 
