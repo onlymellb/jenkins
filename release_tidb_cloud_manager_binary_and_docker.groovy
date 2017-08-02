@@ -45,9 +45,13 @@ COPY apidocs /usr/local/apidocs
 ENTRYPOINT ["/usr/local/bin/tidb-cloud-manager"]
 __EOF__
 								cp -R /tmp/.docker ~/
-								docker build -t pingcap/tidb-cloud-manager:${RELEASE_TAG} .
-								docker push pingcap/tidb-cloud-manager:${RELEASE_TAG}
 								"""
+								withDockerServer([uri: "unix:///var/run/docker.sock"]) {
+									def image = docker.build("pingcap/tidb-cloud-manager:${RELEASE_TAG}", "tidb_cloud-manager_docker_build")
+									//push to docker hub
+									image.push()
+									//push to ucloud registry
+									image.tag("uhub.service.ucloud.cn/pingcap/tidb-cloud-manager:${RELEASE_TAG}").push()
 							}
 						}
 					}
@@ -65,11 +69,11 @@ __EOF__
 			"${env.RUN_DISPLAY_URL}"
 
 			if(currentBuild.result != "SUCCESS"){
-				slackSend channel: '#cloud_jenkins', color: 'danger', teamDomain: 'pingcap', tokenCredentialId: 'slack-pingcap-token', message: "${slackmsg}"
+				slackSend channel: '#cloud_jenkin', color: 'danger', teamDomain: 'pingcap', tokenCredentialId: 'slack-pingcap-token', message: "${slackmsg}"
 			} else {
 				slackmsg = "${slackmsg}" + "\n" +
 				"tidb-cloud-manager Docker Image: `pingcap/tidb-cloud-manager:${RELEASE_TAG}`"
-				slackSend channel: '#cloud_jenkins', color: 'good', teamDomain: 'pingcap', tokenCredentialId: 'slack-pingcap-token', message: "${slackmsg}"
+				slackSend channel: '#cloud_jenkin', color: 'good', teamDomain: 'pingcap', tokenCredentialId: 'slack-pingcap-token', message: "${slackmsg}"
 			}
 		}
 	}
