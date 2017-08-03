@@ -14,9 +14,8 @@ def call(TIDB_CLOUD_MANAGER_BRANCH, RELEASE_TAG) {
                     tidb_sha1 = sh(returnStdout: true, script: "curl ${UCLOUD_OSS_URL}/refs/pingcap/cloud-manager/${TIDB_CLOUD_MANAGER_BRANCH}/centos7/sha1").trim()
                     sh "curl ${UCLOUD_OSS_URL}/builds/pingcap/cloud-manager/${tidb_sha1}/centos7/tidb-cloud-manager.tar.gz| tar xz"
 					withDockerServer([uri: "tcp://${HOSTIP}:32376"]) {
-						def image = docker.build("pingcap/tidb-cloud-manager:${RELEASE_TAG}", "docker")
-						image.push()
-						image.tag("uhub.service.ucloud.cn/pingcap/tidb-cloud-manager:${RELEASE_TAG}").push()
+						docker.build("pingcap/tidb-cloud-manager:${RELEASE_TAG}", "docker").push()
+						docker.build("uhub.service.ucloud.cn/pingcap/tidb-cloud-manager:${RELEASE_TAG}", "docker").push()
 					}
                 }
             }
