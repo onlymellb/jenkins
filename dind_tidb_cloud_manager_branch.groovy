@@ -48,7 +48,7 @@ def call(TIDB_CLOUD_MANAGER_BRANCH) {
 							def DST_FILE_CONTENT = SRC_FILE_CONTENT.replaceAll('image: localhost:5000/pingcap/tidb-cloud-manager:latest', 'image: {{ .Image }}')
 							writeFile file: 'tidb-cloud-manager-rc.yaml.tmpl', text: "${DST_FILE_CONTENT}"
 							sh """
-							mv tidb-cloud-manager-rc.yaml.tmpl test/e2e/docker/tidb-cloud-manager.yaml.tmpl
+							mv tidb-cloud-manager-rc.yaml.tmpl test/e2e/docker/tidb-cloud-manager-rc.yaml.tmpl
 							mkdir -p test/e2e/docker/bin
 							mv test/e2e/e2e.test test/e2e/docker/bin
 							cd test/e2e/docker
