@@ -39,7 +39,7 @@ def call(TIDB_CLOUD_MANAGER_BRANCH) {
 							sh """
 							export GOPATH=${WORKSPACE}/go:$GOPATH
 							echo ${env.PATH}
-							CGO_ENABLED=0 GOOS=linux GOARCH=amd64 ginkgo build test/e2e
+							CGO_ENABLED=0 GOOS=linux GOARCH=amd64 sudo ginkgo build test/e2e
 							"""
 						}
 
