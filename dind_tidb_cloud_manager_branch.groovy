@@ -55,9 +55,7 @@ def call(TIDB_CLOUD_MANAGER_BRANCH) {
 							cat >Dockerfile << __EOF__
 FROM alpine:3.5
 
-ENV KUBE_VERSION 1.7.2
-
-RUN wget https://storage.googleapis.com/kubernetes-release/release/v${KUBE_VERSION}/bin/linux/amd64/kubectl -O /usr/local/bin/kubectl
+RUN wget https://storage.googleapis.com/kubernetes-release/release/v1.7.2/bin/linux/amd64/kubectl -O /usr/local/bin/kubectl
 RUN chmod +x /usr/local/bin/kubectl
 ADD bin/e2e.test /usr/local/bin/e2e.test
 ADD tidb-cloud-manager-rc.yaml.tmpl /tmp/tidb-cloud-manager-rc.yaml.tmpl
