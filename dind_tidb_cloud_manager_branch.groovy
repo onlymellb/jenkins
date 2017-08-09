@@ -53,10 +53,8 @@ def call(TIDB_CLOUD_MANAGER_BRANCH) {
 							mv test/e2e/e2e.test test/e2e/docker/bin
 							cd test/e2e/docker
 							cat >Dockerfile << __EOF__
-FROM alpine:3.5
+FROM pingcap/alpine:3.5
 
-RUN wget https://storage.googleapis.com/kubernetes-release/release/v1.7.2/bin/linux/amd64/kubectl -O /usr/local/bin/kubectl
-RUN chmod +x /usr/local/bin/kubectl
 ADD bin/e2e.test /usr/local/bin/e2e.test
 ADD tidb-cloud-manager-rc.yaml.tmpl /tmp/tidb-cloud-manager-rc.yaml.tmpl
 ADD data /tmp/data
