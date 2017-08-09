@@ -52,6 +52,19 @@ def call(TIDB_CLOUD_MANAGER_BRANCH) {
 							mkdir -p test/e2e/docker/bin
 							mv test/e2e/e2e.test test/e2e/docker/bin
 							cd test/e2e/docker
+							cat >Dockerfile << __EOF__
+FROM alpine:3.5
+
+ENV KUBE_VERSION 1.7.2
+
+RUN wget https://storage.googleapis.com/kubernetes-release/release/v${KUBE_VERSION}/bin/linux/amd64/kubectl -O /usr/local/bin/kubectl
+RUN chmod +x /usr/local/bin/kubectl
+ADD bin/e2e.test /usr/local/bin/e2e.test
+ADD tidb-cloud-manager-rc.yaml.tmpl /tmp/tidb-cloud-manager-rc.yaml.tmpl
+ADD data /tmp/data
+
+CMD ["/usr/local/bin/e2e.test", "-ginkgo.v"]
+__EOF__
 							docker build --tag ${E2E_IMAGE} .
 							docker push ${E2E_IMAGE}
 							"""
