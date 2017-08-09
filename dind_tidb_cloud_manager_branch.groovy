@@ -27,7 +27,7 @@ def call(TIDB_CLOUD_MANAGER_BRANCH) {
 						}
 
 						stage('push tidb-cloud-manager images'){
-							IMAGE_TAG = "localhost:5000/pingcap/tidb-cloud-manager_e2e:${GITHASH.take(7)}"
+							IMAGE_TAG = "localhost:5000/pingcap/tidb-cloud-manager:${GITHASH.take(7)}"
 							sh """
 							cd docker
 							docker build -t ${IMAGE_TAG} .
@@ -39,7 +39,7 @@ def call(TIDB_CLOUD_MANAGER_BRANCH) {
 							sh """
 							export GOPATH=${WORKSPACE}/go:$GOPATH
 							echo ${env.PATH}
-							ginkgo build test/e2e
+							CGO_ENABLED=0 GOOS=linux GOARCH=amd64 ginkgo build test/e2e
 							"""
 						}
 
@@ -69,6 +69,7 @@ __EOF__
 						stage('start run cloud-manager e2e test'){
 							def SRC_FILE_CONTENT = readFile file: "test/e2e/tidb-cloud-manager-e2e.yaml"
 							def DST_FILE_CONTENT = SRC_FILE_CONTENT.replaceAll("image: localhost:5000/ping/tidb-cloud-manager-e2e:1a2e7a7-2017-07-24_01-30-46", "image: ${E2E_IMAGE}")
+							DST_FILE_CONTENT = DST_FILE_CONTENT.replaceAll("localhost:5000/pingcap/tidb-cloud-manager:latest", "${IMAGE_TAG}")
 							writeFile file: 'tidb-cloud-manager-e2e-online.yaml', text: "${DST_FILE_CONTENT}"
 							ansiColor('xterm') {
 							sh """
