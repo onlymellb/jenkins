@@ -6,7 +6,8 @@ def call(TIDB_CLOUD_MANAGER_BRANCH) {
 	env.GOPATH = "/go"
 	env.PATH = "${env.GOROOT}/bin:/bin:${env.PATH}"
 	def BUILD_URL = "git@github.com:pingcap/tidb-cloud-manager.git"
-	def KUBECTL_URL = "https://storage.googleapis.com/kubernetes-release/release/v1.6.4/bin/linux/amd64/kubectl"
+	def E2E_IMAGE = "localhost:5000/pingcap/tidb-cloud-manager-e2e-dind:latest"
+	def KUBECTL_URL = "https://storage.googleapis.com/kubernetes-release/release/v1.7.2/bin/linux/amd64/kubectl"
 
 	catchError {
 		stage('Prepare') {
@@ -46,18 +47,22 @@ def call(TIDB_CLOUD_MANAGER_BRANCH) {
 							def DST_FILE_CONTENT = SRC_FILE_CONTENT.replaceAll('image: localhost:5000/pingcap/tidb-cloud-manager:latest', 'image: {{ .Image }}')
 							writeFile file: 'tidb-cloud-manager-rc.yaml.tmpl', text: "${DST_FILE_CONTENT}"
 							sh """
-							mv tidb-cloud-manager.yaml.tmpl /tmp/tidb-cloud-manager.yaml.tmpl
-							mkdir -p /tmp/data
-							cp ./test/e2e/docker/data/e2e_config.json /tmp/data/e2e_config.json
-							curl -L ${KUBECTL_URL} -o /usr/local/bin/kubectl 2>/dev/null
-							chmod +x /usr/local/bin/kubectl
+							mv tidb-cloud-manager.yaml.tmpl test/e2e/docker/tidb-cloud-manager.yaml.tmpl
+							mkdir -p test/e2e/docker/bin
+							mv test/e2e/e2e.test test/e2e/docker/bin
+							cd test/e2e/docker
+							docker build --tag ${E2E_IMAGE} .
+							docker push ${E2E_IMAGE}
 							"""
 						}
 
 						stage('start run cloud-manager e2e test'){
+							def SRC_FILE_CONTENT = readFile file: "test/e2e/tidb-cloud-manager-e2e.yaml"
+							def DST_FILE_CONTENT = SRC_FILE_CONTENT.replaceAll("image: localhost:5000/ping/tidb-cloud-manager-e2e:1a2e7a7-2017-07-24_01-30-46", "image: ${E2E_IMAGE}")
+							writeFile file: 'tidb-cloud-manager-e2e-online.yaml', text: "${DST_FILE_CONTENT}"
 							ansiColor('xterm') {
 							sh """
-							./test/e2e/e2e.test --ginkgo.v --cloud-manager-image=${IMAGE_TAG} --cloud-manger-Url=http://tidb-cloud-manager:2333
+							kubectl create -f tidb-cloud-manager-e2e-online.yaml
 							"""
 							}
 						}
