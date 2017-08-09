@@ -4,7 +4,7 @@ def call(TIDB_CLOUD_MANAGER_BRANCH) {
 	def GITHASH
 	env.GOROOT = "/usr/local/go"
 	env.GOPATH = "/go"
-	env.PATH = "${env.GOROOT}/bin:/bin:${env.PATH}"
+	env.PATH = "${env.GOROOT}/bin:${env.GOPATH}/bin:/bin:${env.PATH}"
 	def BUILD_URL = "git@github.com:pingcap/tidb-cloud-manager.git"
 	def E2E_IMAGE = "localhost:5000/pingcap/tidb-cloud-manager-e2e-dind:latest"
 	def KUBECTL_URL = "https://storage.googleapis.com/kubernetes-release/release/v1.7.2/bin/linux/amd64/kubectl"
@@ -38,6 +38,7 @@ def call(TIDB_CLOUD_MANAGER_BRANCH) {
 						stage('build cloud-manager e2e binary'){
 							sh """
 							export GOPATH=${WORKSPACE}/go:$GOPATH
+							echo ${env.PATH}
 							ginkgo build test/e2e
 							"""
 						}
