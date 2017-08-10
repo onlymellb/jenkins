@@ -72,8 +72,25 @@ __EOF__
 							writeFile file: 'tidb-cloud-manager-e2e-online.yaml', text: "${DST_FILE_CONTENT}"
 							ansiColor('xterm') {
 							sh """
-							ret=0
+							elapseTime=0
+							period=5
+							threshold=300
 							kubectl create -f tidb-cloud-manager-e2e-online.yaml
+							while true
+							do
+								sleep \$period
+								elapseTime=$(( elapseTime+\$period ))
+								kubectl get po/tidb-cloud-manager-e2e -n kube-system 2>/dev/null || continue
+								kubectl get po/tidb-cloud-manager-e2e -n kube-system|grep Running && break || true
+								if [[ \$elapseTime -gt \$threshold ]]
+								then
+									echo "wait e2e pod timeout, elapseTime: \$elapseTime"
+									kubectl delete -f tidb-cloud-manager-e2e-online.yaml
+									return 1
+								fi
+							done
+							
+							ret=0
 							kubectl logs -f tidb-cloud-manager-e2e -n kube-system|tee -a result.log
 							tail -1 result.log | grep SUCCESS! || ret=\$?
 							kubectl delete -f tidb-cloud-manager-e2e-online.yaml || true
