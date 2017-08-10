@@ -110,7 +110,7 @@ __EOF__
 					//update refs
 					writeFile file: 'sha1', text: "${GITHASH}"
 					sh """
-					filemgr-linux64 --action mput --bucket pingcap-dev --nobar --key refs/pingcap/cloud-manager/${BUILD_BRANCH}/centos7/sha1 --file sha1
+					filemgr-linux64 --action mput --bucket pingcap-dev --nobar --key refs/pingcap/cloud-manager/${TIDB_CLOUD_MANAGER_BRANCH}/centos7/sha1 --file sha1
 					rm -f sha1 tidb-cloud-manager.tar.gz config.cfg
 					"""
 				}
