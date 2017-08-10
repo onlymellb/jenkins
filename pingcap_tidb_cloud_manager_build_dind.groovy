@@ -98,6 +98,20 @@ __EOF__
 					"""
 					}
 				}
+
+				stage('upload tidb-cloud-manager binary'){
+					//upload binary
+					sh """
+					tar zcvf tidb-cloud-manager.tar.gz docker
+					filemgr-linux64 --action mput --bucket pingcap-dev --nobar --key builds/pingcap/cloud-manager/${GITHASH}/centos7/tidb-cloud-manager.tar.gz --file tidb-cloud-manager.tar.gz
+					"""
+
+					//update refs
+					writeFile file: 'sha1', text: "${GITHASH}"
+					sh """
+					filemgr-linux64 --action mput --bucket pingcap-dev --nobar --key refs/pingcap/cloud-manager/${BUILD_BRANCH}/centos7/sha1 --file sha1
+					"""
+				}
 			}
 		}
 		currentBuild.result = "SUCCESS"
