@@ -1,4 +1,4 @@
-def call(BUILD_BRANCH) {
+def call(TIDB_CLOUD_MANAGER_BRANCH) {
 	
 	env.GOROOT = "/usr/local/go"
 	env.GOPATH = "/go"
@@ -6,7 +6,6 @@ def call(BUILD_BRANCH) {
 
 	def IMAGE_TAG
 	def GITHASH
-	def UCLOUD_OSS_URL = "http://pingcap-dev.hk.ufileos.com"
 	def BUILD_URL = "git@github.com:pingcap/tidb-cloud-manager.git"
 	def E2E_IMAGE = "localhost:5000/pingcap/tidb-cloud-manager-e2e:latest"
 
@@ -16,7 +15,7 @@ def call(BUILD_BRANCH) {
 
 			dir("${WORKSPACE}/go/src/github.com/pingcap/tidb-cloud-manager"){
 				stage('build tidb-cloud-manager binary'){
-					git credentialsId: "k8s", url: "${BUILD_URL}", branch: "${BUILD_BRANCH}"
+					git credentialsId: "k8s", url: "${BUILD_URL}", branch: "${TIDB_CLOUD_MANAGER_BRANCH}"
 					GITHASH = sh(returnStdout: true, script: "git rev-parse HEAD").trim()
 					sh """
 					export GOPATH=${WORKSPACE}/go:$GOPATH
@@ -99,22 +98,6 @@ __EOF__
 					"""
 					}
 				}
-
-				stage('upload tidb-cloud-manager binary'){
-					//upload binary
-					sh """
-					cp ~/bin/config.cfg ./
-					tar zcvf tidb-cloud-manager.tar.gz docker
-					filemgr-linux64 --action mput --bucket pingcap-dev --nobar --key builds/pingcap/cloud-manager/${GITHASH}/centos7/tidb-cloud-manager.tar.gz --file tidb-cloud-manager.tar.gz
-					"""
-
-					//update refs
-					writeFile file: 'sha1', text: "${GITHASH}"
-					sh """
-					filemgr-linux64 --action mput --bucket pingcap-dev --nobar --key refs/pingcap/cloud-manager/${BUILD_BRANCH}/centos7/sha1 --file sha1
-					rm -f sha1 tidb-cloud-manager.tar.gz config.cfg
-					"""
-				}
 			}
 		}
 		currentBuild.result = "SUCCESS"
@@ -135,9 +118,9 @@ __EOF__
 		def CHANGELOG = getChangeLogText()
 		def DURATION = (((System.currentTimeMillis() - currentBuild.startTimeInMillis) / 1000 / 60) as double).round(2)
 		def slackmsg = "[${env.JOB_NAME.replaceAll('%2F','/')}-${env.BUILD_NUMBER}] `${currentBuild.result}`" + "\n" +
-		"`${BUILD_BRANCH} Build`" + "\n" +
+		"`e2e test`" + "\n" +
 		"Elapsed Time: `${DURATION}` Mins" + "\n" +
-		"Build Branch: `${BUILD_BRANCH}`, Githash: `${GITHASH.take(7)}`" + "\n" +
+		"Build Branch: `${TIDB_CLOUD_MANAGER_BRANCH}`, Githash: `${GITHASH.take(7)}`" + "\n" +
 		"${CHANGELOG}" + "\n" +
 		"Display URL:" + "\n" +
 		"${env.RUN_DISPLAY_URL}"
@@ -145,9 +128,6 @@ __EOF__
 		if(currentBuild.result != "SUCCESS"){
 			slackSend channel: '#cloud_jenkins', color: 'danger', teamDomain: 'pingcap', tokenCredentialId: 'slack-pingcap-token', message: "${slackmsg}"
 		} else {
-			slackmsg = "${slackmsg}" + "\n" +
-			"Binary Download URL:" + "\n" +
-			"${UCLOUD_OSS_URL}/builds/pingcap/cloud-manager/${GITHASH}/centos7/tidb-cloud-manager.tar.gz"
 			slackSend channel: '#cloud_jenkins', color: 'good', teamDomain: 'pingcap', tokenCredentialId: 'slack-pingcap-token', message: "${slackmsg}"
 		}
 	}
