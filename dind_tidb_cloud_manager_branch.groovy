@@ -75,10 +75,10 @@ __EOF__
 							ret=0
 							kubectl create -f tidb-cloud-manager-e2e-online.yaml
 							kubectl logs -f tidb-cloud-manager-e2e -n kube-system|tee -a result.log
-							tail -1 result.log | grep SUCCESS! || ret=$?
+							tail -1 result.log | grep SUCCESS! || ret=\$?
 							kubectl delete -f tidb-cloud-manager-e2e-online.yaml || true
 							rm result.log
-							return $ret
+							return \$ret
 							"""
 							}
 						}
