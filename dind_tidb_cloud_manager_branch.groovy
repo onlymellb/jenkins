@@ -79,7 +79,7 @@ __EOF__
 							while true
 							do
 								sleep \$period
-								elapseTime=$(( elapseTime+\$period ))
+								elapseTime=\$(( elapseTime+\$period ))
 								kubectl get po/tidb-cloud-manager-e2e -n kube-system 2>/dev/null || continue
 								kubectl get po/tidb-cloud-manager-e2e -n kube-system|grep Running && break || true
 								if [[ \$elapseTime -gt \$threshold ]]
