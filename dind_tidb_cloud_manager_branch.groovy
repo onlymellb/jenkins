@@ -6,7 +6,7 @@ def call(TIDB_CLOUD_MANAGER_BRANCH) {
 	env.GOPATH = "/go"
 	env.PATH = "${env.GOROOT}/bin:${env.GOPATH}/bin:/bin:${env.PATH}"
 	def BUILD_URL = "git@github.com:pingcap/tidb-cloud-manager.git"
-	def E2E_IMAGE = "localhost:5000/pingcap/tidb-cloud-manager-e2e-dind:latest"
+	def E2E_IMAGE = "localhost:5000/pingcap/tidb-cloud-manager-e2e:latest"
 	def KUBECTL_URL = "https://storage.googleapis.com/kubernetes-release/release/v1.7.2/bin/linux/amd64/kubectl"
 
 	catchError {
@@ -67,12 +67,18 @@ __EOF__
 
 						stage('start run cloud-manager e2e test'){
 							def SRC_FILE_CONTENT = readFile file: "test/e2e/tidb-cloud-manager-e2e.yaml"
-							def DST_FILE_CONTENT = SRC_FILE_CONTENT.replaceAll("image: localhost:5000/ping/tidb-cloud-manager-e2e:1a2e7a7-2017-07-24_01-30-46", "image: ${E2E_IMAGE}")
+							def DST_FILE_CONTENT = SRC_FILE_CONTENT.replaceAll("image: localhost:5000/ping/tidb-cloud-manager-e2e:latest", "image: ${E2E_IMAGE}")
 							DST_FILE_CONTENT = DST_FILE_CONTENT.replaceAll("localhost:5000/pingcap/tidb-cloud-manager:latest", "${IMAGE_TAG}")
 							writeFile file: 'tidb-cloud-manager-e2e-online.yaml', text: "${DST_FILE_CONTENT}"
 							ansiColor('xterm') {
 							sh """
+							ret=0
 							kubectl create -f tidb-cloud-manager-e2e-online.yaml
+							kubectl logs -f tidb-cloud-manager-e2e -n kube-system|tee -a result.log
+							tail -1 result.log | grep SUCCESS! || ret=$?
+							kubectl delete -f tidb-cloud-manager-e2e-online.yaml || true
+							rm result.log
+							return $ret
 							"""
 							}
 						}
