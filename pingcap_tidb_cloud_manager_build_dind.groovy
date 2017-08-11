@@ -1,7 +1,7 @@
 def call(BUILD_BRANCH) {
 	
-	env.GOROOT = "/usr/local/go"
 	env.GOPATH = "/go"
+	env.GOROOT = "/usr/local/go"
 	env.PATH = "${env.GOROOT}/bin:${env.GOPATH}/bin:/bin:${env.PATH}:/home/jenkins/bin"
 
 	def IMAGE_TAG

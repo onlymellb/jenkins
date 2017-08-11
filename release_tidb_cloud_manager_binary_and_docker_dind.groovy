@@ -1,13 +1,14 @@
 def call(TIDB_CLOUD_MANAGER_BRANCH, RELEASE_TAG) {
 	
+	env.GOPATH = "/go"
+	env.GOROOT = "/usr/local/go"
+	env.PATH = "${env.GOROOT}/bin:${env.GOPATH}/bin:/bin:${env.PATH}"
+
 	def GITHASH
-	env.PATH = "${env.GOROOT}/bin:/bin:${env.PATH}"
-	def DOCKER_IP = "10.8.45.217"
-	def DOCKER_PORT = 32376
 	def UCLOUD_OSS_URL = "http://pingcap-dev.hk.ufileos.com"
 
 	catchError {
-		node {
+		node('k8s-dind') {
 			def WORKSPACE = pwd()
 			dir("${WORKSPACE}/cloud-manager"){
 				stage('Download tidb-cloud-manager binary'){
@@ -16,10 +17,13 @@ def call(TIDB_CLOUD_MANAGER_BRANCH, RELEASE_TAG) {
 				}
 
 				stage('Push tidb-cloud-manager Docker Image'){
-					withDockerServer([uri: "tcp://${DOCKER_IP}:${DOCKER_PORT}"]) {
-						docker.build("uhub.service.ucloud.cn/pingcap/tidb-cloud-manager:${RELEASE_TAG}", "docker").push()
-						docker.build("pingcap/tidb-cloud-manager:${RELEASE_TAG}", "docker").push()
-					}
+					sh """
+					cd docker
+					docker build -t pingcap/tidb-cloud-manager:${RELEASE_TAG} .
+					docker tag pingcap/tidb-cloud-manager:${RELEASE_TAG} uhub.service.ucloud.cn/pingcap/tidb-cloud-manager:${RELEASE_TAG}
+					docker push uhub.service.ucloud.cn/pingcap/tidb-cloud-manager:${RELEASE_TAG}
+					docker push pingcap/tidb-cloud-manager:${RELEASE_TAG}
+					"""
 				}
 			}
 		}
