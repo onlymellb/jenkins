@@ -44,7 +44,7 @@ def call(BUILD_BRANCH) {
 
 				stage('start prepare runtime environment'){
 					def SRC_FILE_CONTENT = readFile file: "manifests/tidb-cloud-manager-rc.yaml"
-					def DST_FILE_CONTENT = SRC_FILE_CONTENT.replaceAll('image: localhost:5000/pingcap/tidb-cloud-manager:latest', 'image: {{ .Image }}')
+					def DST_FILE_CONTENT = SRC_FILE_CONTENT.replaceAll("image:.*", "image: {{ .Image }}")
 					writeFile file: 'tidb-cloud-manager-rc.yaml.tmpl', text: "${DST_FILE_CONTENT}"
 					sh """
 					mv tidb-cloud-manager-rc.yaml.tmpl test/e2e/docker/tidb-cloud-manager-rc.yaml.tmpl
@@ -67,8 +67,8 @@ __EOF__
 
 				stage('start run cloud-manager e2e test'){
 					def SRC_FILE_CONTENT = readFile file: "test/e2e/tidb-cloud-manager-e2e.yaml"
-					def DST_FILE_CONTENT = SRC_FILE_CONTENT.replaceAll("image: localhost:5000/ping/tidb-cloud-manager-e2e:latest", "image: ${E2E_IMAGE}")
-					DST_FILE_CONTENT = DST_FILE_CONTENT.replaceAll("localhost:5000/pingcap/tidb-cloud-manager:latest", "${IMAGE_TAG}")
+					def DST_FILE_CONTENT = SRC_FILE_CONTENT.replaceAll("image:.*", "image: ${E2E_IMAGE}")
+					DST_FILE_CONTENT = DST_FILE_CONTENT.replaceAll("cloud-manager-image=.*", "cloud-manager-image=${IMAGE_TAG}")
 					writeFile file: 'tidb-cloud-manager-e2e-online.yaml', text: "${DST_FILE_CONTENT}"
 					ansiColor('xterm') {
 					sh """
