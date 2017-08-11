@@ -48,6 +48,7 @@ def call(BUILD_BRANCH) {
 						writeFile file: 'tidb-operator.yaml.tmpl', text: "${DST_FILE_CONTENT}"
 						sh """
 						mv tidb-operator.yaml.tmpl test/e2e/docker/tidb-operator.yaml.tmpl
+						mkdir -p test/e2e/docker/bin
 						mv test/e2e/e2e.test test/e2e/docker/bin
 						cd test/e2e/docker
 						cat >Dockerfile << __EOF__

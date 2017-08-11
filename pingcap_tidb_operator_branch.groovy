@@ -6,7 +6,7 @@ def call(TIDB_OPERATOR_BRANCH) {
 	env.GOPATH = "/go"
 	env.PATH = "${env.GOROOT}/bin:/bin:${env.PATH}"
 	def BUILD_URL = "git@github.com:pingcap/tidb-operator.git"
-	def KUBECTL_URL = "https://storage.googleapis.com/kubernetes-release/release/v1.6.4/bin/linux/amd64/kubectl"
+	def KUBE_VERSION = "1.7.2"
 
 	//define k8s pod template
 	podTemplate(
@@ -63,7 +63,7 @@ def call(TIDB_OPERATOR_BRANCH) {
 								mv tidb-operator.yaml.tmpl /tmp/tidb-operator.yaml.tmpl
 								mkdir -p /tmp/data
 								cp ./test/e2e/docker/data/e2e-one.yaml /tmp/data/e2e-one.yaml
-								curl -L ${KUBECTL_URL} -o /usr/local/bin/kubectl 2>/dev/null
+								curl -L https://storage.googleapis.com/kubernetes-release/release/v${KUBE_VERSION}/bin/linux/amd64/kubectl -o /usr/local/bin/kubectl 2>/dev/null
 								chmod +x /usr/local/bin/kubectl
 								"""
 							}
