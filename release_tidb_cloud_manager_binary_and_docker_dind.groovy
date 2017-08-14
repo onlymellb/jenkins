@@ -8,8 +8,10 @@ def call(TIDB_CLOUD_MANAGER_BRANCH, RELEASE_TAG) {
 	def UCLOUD_OSS_URL = "http://pingcap-dev.hk.ufileos.com"
 
 	catchError {
-		node('k8s-dind') {
+		node('k8s_centos7_build') {
 			def WORKSPACE = pwd()
+			def HOSTIP = env.NODE_NAME.getAt(7..(env.NODE_NAME.lastIndexOf('-') - 1))
+
 			dir("${WORKSPACE}/cloud-manager"){
 				stage('Download tidb-cloud-manager binary'){
 					GITHASH = sh(returnStdout: true, script: "curl ${UCLOUD_OSS_URL}/refs/pingcap/cloud-manager/${TIDB_CLOUD_MANAGER_BRANCH}/centos7/sha1").trim()
@@ -17,13 +19,10 @@ def call(TIDB_CLOUD_MANAGER_BRANCH, RELEASE_TAG) {
 				}
 
 				stage('Push tidb-cloud-manager Docker Image'){
-					sh """
-					cd docker
-					docker build -t pingcap/tidb-cloud-manager:${RELEASE_TAG} .
-					docker tag pingcap/tidb-cloud-manager:${RELEASE_TAG} uhub.service.ucloud.cn/pingcap/tidb-cloud-manager:${RELEASE_TAG}
-					docker push uhub.service.ucloud.cn/pingcap/tidb-cloud-manager:${RELEASE_TAG}
-					docker push pingcap/tidb-cloud-manager:${RELEASE_TAG}
-					"""
+					withDockerServer([uri: "tcp://${HOSTIP}:32376"]) {
+						docker.build("uhub.service.ucloud.cn/pingcap/tidb-cloud-manager:${RELEASE_TAG}", "docker").push()
+						docker.build("pingcap/tidb-cloud-manager:${RELEASE_TAG}", "docker").push()
+					}
 				}
 			}
 		}
