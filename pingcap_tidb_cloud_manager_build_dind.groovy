@@ -11,10 +11,10 @@ def call(BUILD_BRANCH) {
 	def E2E_IMAGE = "localhost:5000/pingcap/tidb-cloud-manager-e2e:latest"
 
 	catchError {
-		node('k8s-dind') {
+		node('k8s_centos7_build'){
 			def WORKSPACE = pwd()
 
-			dir("${WORKSPACE}/go/src/github.com/pingcap/tidb-cloud-manager"){
+			dir('go/src/github.com/pingcap/tidb-cloud-manager'){
 				stage('build tidb-cloud-manager binary'){
 					git credentialsId: "k8s", url: "${BUILD_URL}", branch: "${BUILD_BRANCH}"
 					GITHASH = sh(returnStdout: true, script: "git rev-parse HEAD").trim()
@@ -25,7 +25,16 @@ def call(BUILD_BRANCH) {
 					cp bin/tidb-* docker/bin
 					"""
 				}
+			}
+			stash includes: "go/src/github.com/pingcap/tidb-cloud-manager/**", name: "tidb-cloud-manager"
+		}
 
+		node('k8s-dind') {
+			def WORKSPACE = pwd()
+			deleteDir()
+			unstash 'tidb-cloud-manager'
+
+			dir('go/src/github.com/pingcap/tidb-cloud-manager'){
 				stage('push tidb-cloud-manager images'){
 					IMAGE_TAG = "localhost:5000/pingcap/tidb-cloud-manager:${GITHASH.take(7)}"
 					sh """
