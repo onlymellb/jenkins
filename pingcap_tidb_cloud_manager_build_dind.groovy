@@ -27,7 +27,7 @@ def call(BUILD_BRANCH) {
 					"""
 				}
 			}
-			stash excludes: "${PROJECT_DIR}/vendor", includes: "${PROJECT_DIR}/**", name: "tidb-cloud-manager"
+			stash excludes: "${PROJECT_DIR}/vendor/**", includes: "${PROJECT_DIR}/**", name: "tidb-cloud-manager"
 		}
 
 		node('k8s-dind') {
