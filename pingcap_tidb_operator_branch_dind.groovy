@@ -1,4 +1,4 @@
-def call(BUILD_BRANCH) {
+def call(TIDB_OPERATOR_BRANCH) {
 	
 	env.GOROOT = "/usr/local/go"
 	env.GOPATH = "/go"
@@ -17,7 +17,7 @@ def call(BUILD_BRANCH) {
 
 			dir("${PROJECT_DIR}"){
 				stage('build tidb-operator binary'){
-					git credentialsId: "k8s", url: "${BUILD_URL}", branch: "${BUILD_BRANCH}"
+					git credentialsId: "k8s", url: "${BUILD_URL}", branch: "${TIDB_OPERATOR_BRANCH}"
 					GITHASH = sh(returnStdout: true, script: "git rev-parse HEAD").trim()
 					sh """
 					export GOPATH=${WORKSPACE}/go:$GOPATH
@@ -37,7 +37,7 @@ def call(BUILD_BRANCH) {
 			deleteDir()
 			unstash 'tidb-operator'
 
-			dir("${WORKSPACE}"){
+			dir("${PROJECT_DIR}"){
 				stage('push tidb-operator images'){
 					IMAGE_TAG = "localhost:5000/pingcap/tidb-operator:${GITHASH.take(7)}"
 					sh """
@@ -106,23 +106,6 @@ __EOF__
 					"""
 					}
 				}
-
-				stage('upload tidb-operator binary'){
-
-					//upload binary
-					sh """
-					cp ~/bin/config.cfg ./
-					tar zcvf tidb-operator.tar.gz bin/*
-					filemgr-linux64 --action mput --bucket pingcap-dev --nobar --key builds/pingcap/operator/${GITHASH}/centos7/tidb-operator.tar.gz --file tidb-operator.tar.gz
-					"""
-
-					//update refs
-					writeFile file: 'sha1', text: "${GITHASH}"
-					sh """
-					filemgr-linux64 --action mput --bucket pingcap-dev --nobar --key refs/pingcap/operator/${BUILD_BRANCH}/centos7/sha1 --file sha1
-					rm -f sha1 tidb-operator.tar.gz config.cfg
-					"""
-				}
 			}
 		}
 		currentBuild.result = "SUCCESS"
@@ -143,9 +126,9 @@ __EOF__
 		def CHANGELOG = getChangeLogText()
 		def DURATION = (((System.currentTimeMillis() - currentBuild.startTimeInMillis) / 1000 / 60) as double).round(2)
 		def slackmsg = "[${env.JOB_NAME.replaceAll('%2F','/')}-${env.BUILD_NUMBER}] `${currentBuild.result}`" + "\n" +
-		"`${BUILD_BRANCH} Build`" + "\n" +
+		"`e2e test`" + "\n" +
 		"Elapsed Time: `${DURATION}` Mins" + "\n" +
-		"Build Branch: `${BUILD_BRANCH}`, Githash: `${GITHASH.take(7)}`" + "\n" +
+		"Build Branch: `${TIDB_OPERATOR_BRANCH}`, Githash: `${GITHASH.take(7)}`" + "\n" +
 		"${CHANGELOG}" + "\n" +
 		"Display URL:" + "\n" +
 		"${env.RUN_DISPLAY_URL}"
@@ -153,9 +136,6 @@ __EOF__
 		if(currentBuild.result != "SUCCESS"){
 			slackSend channel: '#cloud_jenkins', color: 'danger', teamDomain: 'pingcap', tokenCredentialId: 'slack-pingcap-token', message: "${slackmsg}"
 		} else {
-			slackmsg = "${slackmsg}" + "\n" +
-			"Binary Download URL:" + "\n" +
-			"${UCLOUD_OSS_URL}/builds/pingcap/operator/${GITHASH}/centos7/tidb-operator.tar.gz"
 			slackSend channel: '#cloud_jenkins', color: 'good', teamDomain: 'pingcap', tokenCredentialId: 'slack-pingcap-token', message: "${slackmsg}"
 		}
 	}
