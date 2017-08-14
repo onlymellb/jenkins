@@ -9,12 +9,13 @@ def call(BUILD_BRANCH) {
 	def UCLOUD_OSS_URL = "http://pingcap-dev.hk.ufileos.com"
 	def BUILD_URL = "git@github.com:pingcap/tidb-cloud-manager.git"
 	def E2E_IMAGE = "localhost:5000/pingcap/tidb-cloud-manager-e2e:latest"
+	def PROJECT_DIR = "go/src/github.com/pingcap/tidb-cloud-manager"
 
 	catchError {
 		node('k8s_centos7_build'){
 			def WORKSPACE = pwd()
 
-			dir('go/src/github.com/pingcap/tidb-cloud-manager'){
+			dir('${PROJECT_DIR}'){
 				stage('build tidb-cloud-manager binary'){
 					git credentialsId: "k8s", url: "${BUILD_URL}", branch: "${BUILD_BRANCH}"
 					GITHASH = sh(returnStdout: true, script: "git rev-parse HEAD").trim()
@@ -26,7 +27,7 @@ def call(BUILD_BRANCH) {
 					"""
 				}
 			}
-			stash includes: "go/src/github.com/pingcap/tidb-cloud-manager/**", name: "tidb-cloud-manager"
+			stash excludes: "${PROJECT_DIR}/vendor", includes: "${PROJECT_DIR}/**", name: "tidb-cloud-manager"
 		}
 
 		node('k8s-dind') {
@@ -34,7 +35,7 @@ def call(BUILD_BRANCH) {
 			deleteDir()
 			unstash 'tidb-cloud-manager'
 
-			dir('go/src/github.com/pingcap/tidb-cloud-manager'){
+			dir('${PROJECT_DIR}'){
 				stage('push tidb-cloud-manager images'){
 					IMAGE_TAG = "localhost:5000/pingcap/tidb-cloud-manager:${GITHASH.take(7)}"
 					sh """
