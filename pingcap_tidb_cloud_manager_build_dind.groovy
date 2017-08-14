@@ -15,7 +15,7 @@ def call(BUILD_BRANCH) {
 		node('k8s_centos7_build'){
 			def WORKSPACE = pwd()
 
-			dir('${PROJECT_DIR}'){
+			dir("${PROJECT_DIR}"){
 				stage('build tidb-cloud-manager binary'){
 					git credentialsId: "k8s", url: "${BUILD_URL}", branch: "${BUILD_BRANCH}"
 					GITHASH = sh(returnStdout: true, script: "git rev-parse HEAD").trim()
@@ -35,7 +35,7 @@ def call(BUILD_BRANCH) {
 			deleteDir()
 			unstash 'tidb-cloud-manager'
 
-			dir('${PROJECT_DIR}'){
+			dir("${PROJECT_DIR}"){
 				stage('push tidb-cloud-manager images'){
 					IMAGE_TAG = "localhost:5000/pingcap/tidb-cloud-manager:${GITHASH.take(7)}"
 					sh """
