@@ -16,14 +16,16 @@ def call(BUILD_BRANCH) {
 			def WORKSPACE = pwd()
 
 			dir("${PROJECT_DIR}"){
-				stage('build tidb-cloud-manager binary'){
+				stage('build tidb-cloud-manager and e2e binary'){
 					git credentialsId: "k8s", url: "${BUILD_URL}", branch: "${BUILD_BRANCH}"
 					GITHASH = sh(returnStdout: true, script: "git rev-parse HEAD").trim()
 					sh """
 					export GOPATH=${WORKSPACE}/go:$GOPATH
 					make
 					mkdir -p docker/bin
-					cp bin/tidb-* docker/bin
+					mv bin/tidb-* docker/bin
+
+					CGO_ENABLED=0 GOOS=linux GOARCH=amd64 ginkgo build test/e2e
 					"""
 				}
 			}
@@ -42,13 +44,6 @@ def call(BUILD_BRANCH) {
 					cd docker
 					docker build -t ${IMAGE_TAG} .
 					docker push ${IMAGE_TAG}
-					"""
-				}
-
-				stage('build cloud-manager e2e binary'){
-					sh """
-					export GOPATH=${WORKSPACE}/go:$GOPATH
-					CGO_ENABLED=0 GOOS=linux GOARCH=amd64 ginkgo build test/e2e
 					"""
 				}
 
