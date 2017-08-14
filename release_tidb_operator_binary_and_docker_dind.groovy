@@ -8,8 +8,10 @@ def call(TIDB_OPERATOR_BRANCH, RELEASE_TAG) {
 	def UCLOUD_OSS_URL = "http://pingcap-dev.hk.ufileos.com"
 
 	catchError {
-		node('k8s-dind') {
+		node('k8s_centos7_build') {
 			def WORKSPACE = pwd()
+			def HOSTIP = env.NODE_NAME.getAt(8..(env.NODE_NAME.lastIndexOf('-') - 1)
+
 			dir("${WORKSPACE}/operator"){
 				stage('Download tidb-operator binary'){
 					GITHASH = sh(returnStdout: true, script: "curl ${UCLOUD_OSS_URL}/refs/pingcap/operator/${TIDB_OPERATOR_BRANCH}/centos7/sha1").trim()
@@ -28,11 +30,11 @@ ADD bin/tidb-volume-manager /usr/local/bin/tidb-volume-manager
 ADD bin/tidb-scheduler /usr/local/bin/tidb-scheduler
 CMD ["/bin/sh", "-c", "/usr/local/bin/tidb-operator"]
 __EOF__
-					docker build -t pingcap/tidb-operator:${RELEASE_TAG} .
-					docker tag pingcap/tidb-operator:${RELEASE_TAG} uhub.service.ucloud.cn/pingcap/tidb-operator:${RELEASE_TAG}
-					docker push uhub.service.ucloud.cn/pingcap/tidb-operator:${RELEASE_TAG}
-					docker push pingcap/tidb-operator:${RELEASE_TAG}
 					"""
+					withDockerServer([uri: "tcp://${HOSTIP}:32376"]) {
+						docker.build("uhub.service.ucloud.cn/pingcap/tidb-operator:${RELEASE_TAG}", "tidb_operator_docker_build").push()
+						docker.build("pingcap/tidb-operator:${RELEASE_TAG}", "tidb_operator_docker_build").push()
+					}
 				}
 			}
 		}
