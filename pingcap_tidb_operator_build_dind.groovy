@@ -112,7 +112,7 @@ __EOF__
 					//upload binary
 					sh """
 					cp ~/bin/config.cfg ./
-					tar zcvf tidb-operator.tar.gz bin/*
+					tar zcvf tidb-operator.tar.gz docker/bin/*
 					filemgr-linux64 --action mput --bucket pingcap-dev --nobar --key builds/pingcap/operator/${GITHASH}/centos7/tidb-operator.tar.gz --file tidb-operator.tar.gz
 					"""
 
