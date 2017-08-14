@@ -10,7 +10,7 @@ def call(TIDB_OPERATOR_BRANCH, RELEASE_TAG) {
 	catchError {
 		node('k8s_centos7_build') {
 			def WORKSPACE = pwd()
-			def HOSTIP = env.NODE_NAME.getAt(8..(env.NODE_NAME.lastIndexOf('-') - 1)
+			def HOSTIP = env.NODE_NAME.getAt(8..(env.NODE_NAME.lastIndexOf('-') - 1))
 
 			dir("${WORKSPACE}/operator"){
 				stage('Download tidb-operator binary'){
