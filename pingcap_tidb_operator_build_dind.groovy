@@ -37,7 +37,7 @@ def call(BUILD_BRANCH) {
 			deleteDir()
 			unstash 'tidb-operator'
 
-			dir("${WORKSPACE}"){
+			dir("${PROJECT_DIR}"){
 				stage('push tidb-operator images'){
 					IMAGE_TAG = "localhost:5000/pingcap/tidb-operator:${GITHASH.take(7)}"
 					sh """
