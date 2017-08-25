@@ -22,7 +22,7 @@ def call(TIDB_OPERATOR_BRANCH, RELEASE_TAG) {
 					sh """
 					mkdir -p tidb_operator_docker_build/bin
 					cd tidb_operator_docker_build
-					cp ../bin/* ./bin
+					cp ../docker/bin/* ./bin
 					cat > Dockerfile << __EOF__
 FROM alpine:3.5
 ADD bin/tidb-operator /usr/local/bin/tidb-operator
