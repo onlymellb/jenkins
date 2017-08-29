@@ -1,5 +1,5 @@
 def call(TIDB_OPERATOR_BRANCH, RELEASE_TAG) {
-	
+
 	env.GOPATH = "/go"
 	env.GOROOT = "/usr/local/go"
 	env.PATH = "${env.GOROOT}/bin:${env.GOPATH}/bin:/bin:${env.PATH}"
@@ -25,7 +25,7 @@ def call(TIDB_OPERATOR_BRANCH, RELEASE_TAG) {
 					cp ../docker/bin/* ./bin
 					cat > Dockerfile << __EOF__
 FROM alpine:3.5
-ADD bin/tidb-operator /usr/local/bin/tidb-operator
+ADD bin/tidb-controller-manager /usr/local/bin/tidb-controller-manager
 ADD bin/tidb-volume-manager /usr/local/bin/tidb-volume-manager
 ADD bin/tidb-scheduler /usr/local/bin/tidb-scheduler
 CMD ["/bin/sh", "-c", "/usr/local/bin/tidb-operator"]
