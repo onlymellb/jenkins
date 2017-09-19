@@ -2,7 +2,7 @@ def call(BUILD_BRANCH) {
 
 	env.GOPATH = "/go"
 	env.GOROOT = "/usr/local/go"
-	env.PATH = "${env.GOROOT}/bin:${env.GOPATH}/bin:/bin:${env.PATH}"
+	env.PATH = "${env.GOROOT}/bin:${env.GOPATH}/bin:/bin:${env.PATH}:/home/jenkins/bin"
 
 	def GITHASH
 	def BUILD_URL = "git@github.com:pingcap/tidb-cloud-manager.git"
