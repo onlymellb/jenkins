@@ -1,5 +1,5 @@
 def call(BUILD_BRANCH) {
-	
+
 	env.GOPATH = "/go"
 	env.GOROOT = "/usr/local/go"
 	env.PATH = "${env.GOROOT}/bin:${env.GOPATH}/bin:/bin:${env.PATH}:/home/jenkins/bin"
@@ -23,7 +23,7 @@ def call(BUILD_BRANCH) {
 					export GOPATH=${WORKSPACE}/go:$GOPATH
 					make
 					mkdir -p docker/bin
-					mv bin/tidb-* docker/bin
+					mv bin/{managerctl,tidb-cloud-manager} docker/bin
 
 					CGO_ENABLED=0 GOOS=linux GOARCH=amd64 ginkgo build test/e2e
 					"""
@@ -48,19 +48,31 @@ def call(BUILD_BRANCH) {
 				}
 
 				stage('start prepare runtime environment'){
-					def SRC_FILE_CONTENT = readFile file: "manifests/tidb-cloud-manager-rc.yaml"
+					def SRC_FILE_CONTENT = readFile file: "manifests/tidb-cloud-manager.yaml"
 					def DST_FILE_CONTENT = SRC_FILE_CONTENT.replaceAll("image:.*", "image: {{ .Image }}")
-					writeFile file: 'tidb-cloud-manager-rc.yaml.tmpl', text: "${DST_FILE_CONTENT}"
+					DST_FILE_CONTENT = DST_FILE_CONTENT.replaceAll("repo-prefix=.*", "repo-prefix=localhost:5000/pingcap")
+					DST_FILE_CONTENT = DST_FILE_CONTENT.replaceAll("retention-duration=0", "retention-duration=2m")
+					writeFile file: 'tidb-cloud-manager.yaml.tmpl', text: "${DST_FILE_CONTENT}"
+
+					def OPERATOR_SRC_FILE_CONTENT = readFile file: "test/e2e/docker/tidb-operator.yaml"
+					def OPERATOR_DST_FILE_CONTENT = OPERATOR_SRC_FILE_CONTENT.replaceAll("image: pingcap/tidb-operator:latest", "image: {{ .Image }}")
+					writeFile file: 'tidb-operator.yaml.tmpl', text: "${OPERATOR_DST_FILE_CONTENT}"
+
 					sh """
-					mv tidb-cloud-manager-rc.yaml.tmpl test/e2e/docker/tidb-cloud-manager-rc.yaml.tmpl
+					mv tidb-cloud-manager.yaml.tmpl test/e2e/docker/tidb-cloud-manager.yaml.tmpl
+                                        cp manifests/tidb-cloud-manager-config.yaml test/e2e/docker/tidb-cloud-manager-config.yaml
+					mv tidb-operator.yaml.tmpl test/e2e/docker/tidb-operator.yaml.tmpl
+
 					mkdir -p test/e2e/docker/bin
 					mv test/e2e/e2e.test test/e2e/docker/bin
 					cd test/e2e/docker
 					cat >Dockerfile << __EOF__
-FROM pingcap/alpine:3.5
+FROM pingcap/alpine-kube:latest
 
 ADD bin/e2e.test /usr/local/bin/e2e.test
-ADD tidb-cloud-manager-rc.yaml.tmpl /tmp/tidb-cloud-manager-rc.yaml.tmpl
+ADD tidb-cloud-manager.yaml.tmpl /tmp/tidb-cloud-manager.yaml.tmpl
+ADD tidb-cloud-manager-config.yaml /tmp/tidb-cloud-manager-config.yaml
+ADD tidb-operator.yaml.tmpl /tmp/tidb-operator.yaml.tmpl
 ADD data /tmp/data
 
 CMD ["/usr/local/bin/e2e.test", "-ginkgo.v"]
@@ -80,6 +92,7 @@ __EOF__
 					elapseTime=0
 					period=5
 					threshold=300
+					kubectl delete -f tidb-cloud-manager-e2e-online.yaml || true
 					kubectl create -f tidb-cloud-manager-e2e-online.yaml
 					while true
 					do
@@ -90,15 +103,27 @@ __EOF__
 						if [[ \$elapseTime -gt \$threshold ]]
 						then
 							echo "wait e2e pod timeout, elapseTime: \$elapseTime"
-							kubectl delete -f tidb-cloud-manager-e2e-online.yaml
 							exit 1
 						fi
 					done
-					
+
+					execType=0
+					while true
+					do
+						if [[ \$execType -eq 0 ]]
+						then
+							kubectl logs -f tidb-cloud-manager-e2e -n kube-system|tee -a result.log
+						else
+							execType=0
+							kubectl logs --tail 1 -f tidb-cloud-manager-e2e -n kube-system|tee -a result.log
+						fi
+						## verify that the log output is exit normally
+						tail -5 result.log|grep Pending|grep Skipped||execType=\$?
+						[[ \$execType -eq 0 ]] && break
+					done
+
 					ret=0
-					kubectl logs -f tidb-cloud-manager-e2e -n kube-system|tee -a result.log
-					tail -1 result.log | grep SUCCESS! || ret=\$?
-					kubectl delete -f tidb-cloud-manager-e2e-online.yaml || true
+					tail -5 result.log | grep SUCCESS! || ret=\$?
 					rm result.log
 					exit \$ret
 					"""

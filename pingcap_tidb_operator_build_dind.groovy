@@ -1,5 +1,13 @@
+def replace(file) {
+	def SRC_E2E_FILE_CONTENT = readFile file: file
+	def DST_E2E_FILE_CONTENT = SRC_E2E_FILE_CONTENT.replaceAll("image: pingcap/pd:.*", "image: localhost:5000/pingcap/pd:v1.0.0")
+	DST_E2E_FILE_CONTENT = DST_E2E_FILE_CONTENT.replaceAll("image: pingcap/tidb:.*", "image: localhost:5000/pingcap/tidb:v1.0.0")
+	DST_E2E_FILE_CONTENT = DST_E2E_FILE_CONTENT.replaceAll("image: pingcap/tikv:.*", "image: localhost:5000/pingcap/tikv:v1.0.0")
+	writeFile file: file, text: "${DST_E2E_FILE_CONTENT}"
+}
+
 def call(BUILD_BRANCH) {
-	
+
 	env.GOROOT = "/usr/local/go"
 	env.GOPATH = "/go"
 	env.PATH = "${env.GOROOT}/bin:${env.GOPATH}/bin:/bin:${env.PATH}:/home/jenkins/bin"
@@ -48,23 +56,36 @@ def call(BUILD_BRANCH) {
 				}
 
 				stage('start prepare runtime environment'){
-					def SRC_FILE_CONTENT = readFile file: "example/tidb-operator.yaml"
+					def SRC_FILE_CONTENT = readFile file: "manifests/tidb-operator.yaml"
 					def DST_FILE_CONTENT = SRC_FILE_CONTENT.replaceAll("image: pingcap/tidb-operator:.*", "image: {{ .Image }}")
 					DST_FILE_CONTENT = DST_FILE_CONTENT.replaceAll("image: quay.io/coreos/hyperkube:.*", "image: mirantis/hypokube:final")
 					writeFile file: 'tidb-operator.yaml.tmpl', text: "${DST_FILE_CONTENT}"
+
+					replace("test/e2e/docker/data/e2e-bestfit.yaml")
+					replace("test/e2e/docker/data/e2e-decrease.yaml")
+					replace("test/e2e/docker/data/e2e-ha.yaml")
+					replace("test/e2e/docker/data/e2e-increase.yaml")
+					replace("test/e2e/docker/data/e2e-pause.yaml")
+					replace("test/e2e/docker/data/e2e-upgrade.yaml")
+					replace("test/e2e/docker/data/e2e-volume.yaml")
+					replace("test/e2e/docker/data/e2e-delete.yaml")
+					replace("test/e2e/docker/data/e2e-retention.yaml")
+
 					sh """
 					mv tidb-operator.yaml.tmpl test/e2e/docker/tidb-operator.yaml.tmpl
 					mkdir -p test/e2e/docker/bin
 					mv test/e2e/e2e.test test/e2e/docker/bin
 					cd test/e2e/docker
 					cat >Dockerfile << __EOF__
-FROM pingcap/alpine:3.5
+FROM pingcap/alpine-kube:latest
 
 ADD bin/e2e.test /usr/local/bin/e2e.test
 ADD tidb-operator.yaml.tmpl /tmp/tidb-operator.yaml.tmpl
 ADD data /tmp/data
+ADD run_e2e /usr/local/bin/run_e2e
+RUN chmod +x /usr/local/bin/run_e2e
 
-CMD ["/usr/local/bin/e2e.test", "-ginkgo.v"]
+CMD ["/usr/local/bin/run_e2e"]
 __EOF__
 					docker build --tag ${E2E_IMAGE} .
 					docker push ${E2E_IMAGE}
@@ -72,9 +93,9 @@ __EOF__
 				}
 
 				stage('start run operator e2e test'){
-					def SRC_FILE_CONTENT = readFile file: "test/e2e/tidb-operator-e2e.yaml"
+					def SRC_FILE_CONTENT = readFile file: "test/e2e/manifests/tidb-operator-e2e.yaml"
 					def DST_FILE_CONTENT = SRC_FILE_CONTENT.replaceAll("image:.*", "image: ${E2E_IMAGE}")
-					DST_FILE_CONTENT = DST_FILE_CONTENT.replaceAll("operator-image=.*", "operator-image=${IMAGE_TAG}")
+					DST_FILE_CONTENT = DST_FILE_CONTENT.replaceAll("value: localhost:5000/pingcap/tidb-operator:latest", "value: ${IMAGE_TAG}")
 					writeFile file: 'tidb-operator-e2e-online.yaml', text: "${DST_FILE_CONTENT}"
 
 					ansiColor('xterm') {
@@ -82,6 +103,7 @@ __EOF__
 					elapseTime=0
 					period=5
 					threshold=300
+					kubectl delete -f tidb-operator-e2e-online.yaml || true
 					kubectl create -f tidb-operator-e2e-online.yaml
 					while true
 					do
@@ -92,15 +114,27 @@ __EOF__
 						if [[ \$elapseTime -gt \$threshold ]]
 						then
 							echo "wait e2e pod timeout, elapseTime: \$elapseTime"
-							kubectl delete -f tidb-operator-e2e-online.yaml
 							exit 1
 						fi
 					done
-					
+
+					execType=0
+					while true
+					do
+						if [[ \$execType -eq 0 ]]
+						then
+							kubectl logs -f tidb-operator-e2e -n kube-system|tee -a result.log
+						else
+							execType=0
+							kubectl logs --tail 1 -f tidb-operator-e2e -n kube-system|tee -a result.log
+						fi
+						## verify that the log output is exit normally
+						tail -5 result.log|egrep 'Test Suite Failed|Test Suite Passed'||execType=\$?
+						[[ \$execType -eq 0 ]] && break
+					done
+
 					ret=0
-					kubectl logs -f tidb-operator-e2e -n kube-system|tee -a result.log
-					tail -1 result.log | grep SUCCESS! || ret=\$?
-					kubectl delete -f tidb-operator-e2e-online.yaml || true
+					tail -1 result.log | grep 'Test Suite Passed' || ret=\$?
 					rm result.log
 					exit \$ret
 					"""
