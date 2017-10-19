@@ -25,7 +25,7 @@ def call(BUILD_BRANCH) {
 
 			dir("${PROJECT_DIR}"){
 				stage('build tidb-operator binary'){
-					git credentialsId: "k8s", url: "${BUILD_URL}", branch: "${BUILD_BRANCH}"
+					checkout([$class: 'GitSCM', branches: [[name: "${BUILD_BRANCH}"]], userRemoteConfigs: [[url: "${BUILD_URL}", credentialsId: "k8s"]]])
 					GITHASH = sh(returnStdout: true, script: "git rev-parse HEAD").trim()
 					sh """
 					export GOPATH=${WORKSPACE}/go:$GOPATH
